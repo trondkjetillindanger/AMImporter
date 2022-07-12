@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AMImporter": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\temp\\si-stevne1\\NIF XML_eventid_370172.XML\""
+    }
+  }
+}
