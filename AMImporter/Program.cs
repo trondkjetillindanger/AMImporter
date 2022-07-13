@@ -3,7 +3,7 @@ using System.Text;
 using System.Xml.Linq;
 using AMImporter;
 
-class Program
+class EventImporter
 {
     static void Main(string[] args)
     {
@@ -15,6 +15,10 @@ class Program
 
         string path = Path.GetFullPath(currentDirectory);
         TimeSchedule timeSchedule = new TimeSchedule(path);
+        AMImporter.Event eventImporter = new AMImporter.Event();
+        eventImporter.Create(path, timeSchedule);
+        EventCategory eventCategory = new EventCategory();
+        eventCategory.Create(path, timeSchedule);
 
         XElement root = XElement.Load(filename);
         Team teams = new Team(root, path);
