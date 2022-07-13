@@ -17,6 +17,7 @@ class EventImporter
         TimeSchedule timeSchedule = new TimeSchedule(path);
         AMImporter.Event eventImporter = new AMImporter.Event();
         eventImporter.Create(path, timeSchedule);
+        eventImporter.CreateRound(path, timeSchedule);
         EventCategory eventCategory = new EventCategory();
         eventCategory.Create(path, timeSchedule);
 
