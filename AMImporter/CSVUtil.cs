@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AMImporter
 {
-    public static class FileUtil
+    public static class CSVUtil
     {
         public static void CreateNewCSV(string filename, string CSV)
         {
@@ -15,6 +15,12 @@ namespace AMImporter
             {
                 sw.WriteLine(CSV);
             }
+        }
+
+        public static string RemoveLastNewline(string CSV)
+        {
+            int lastNewLine = CSV.LastIndexOf(Environment.NewLine);
+            return CSV.Substring(0, lastNewLine);
         }
     }
 }

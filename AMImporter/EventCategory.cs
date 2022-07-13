@@ -24,11 +24,8 @@ namespace AMImporter
                 });
             });
 
-            int lastNewLine = eventCategoriesCSV.LastIndexOf(Environment.NewLine);
-            eventCategoriesCSV = eventCategoriesCSV.Substring(0, lastNewLine - 1);
-
             string filename = $"{_path}\\create\\eventcategories.csv";
-            FileUtil.CreateNewCSV(filename, eventCategoriesCSV);
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(eventCategoriesCSV));
         }
     }
 }

@@ -12,8 +12,8 @@ namespace AMImporter
         public Dictionary<string, AMEvent> AMEvents { get; set; }
         public TimeSchedule(string _path)
         {
-            string fullFileName = _path + "\\" + filename;
-            AMEvents = File.ReadLines(fullFileName).Select(line => line.Split(';')).ToDictionary(line => line[1], line => new AMEvent { Name = line[1], Time = line[0], SAEventCategoryName = line[2], AgeCategory = line[3].Split(',').ToList(), EventTypeStandardName = line[4] });
+            string fullFileName = _path + "\\create\\" + filename;
+            AMEvents = File.ReadLines(fullFileName).Select(line => line.Split(';')).ToDictionary(line => line[2], line => new AMEvent { Session = line[0], Name = line[2], Time = line[1], SAEventCategoryName = line[3], AgeCategory = line[4].Split(',').ToList(), EventTypeStandardName = line[5] });
         }
 
         public string GetAMEventName(string SAEventCategory, string SAAgeCategoryCode)

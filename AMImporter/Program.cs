@@ -14,10 +14,11 @@ class EventImporter
         string currentDirectory = Path.GetDirectoryName(filename);
 
         string path = Path.GetFullPath(currentDirectory);
+        Competition competition = new Competition(path);
         TimeSchedule timeSchedule = new TimeSchedule(path);
         AMImporter.Event eventImporter = new AMImporter.Event();
-        eventImporter.Create(path, timeSchedule);
-        eventImporter.CreateRound(path, timeSchedule);
+        eventImporter.Create(path, competition, timeSchedule);
+        eventImporter.CreateRound(path, competition, timeSchedule);
         EventCategory eventCategory = new EventCategory();
         eventCategory.Create(path, timeSchedule);
 

@@ -8,6 +8,7 @@ namespace AMImporter
 {
     public class AMEvent
     {
+        public string Session { get; set; }
         public string Name { get; set; }
         public string SAEventCategoryName { get; set; }
         public string Time { get; set; }

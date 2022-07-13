@@ -49,11 +49,8 @@ namespace AMImporter
                     sb => sb.ToString()
                     );
 
-            int lastNewLine = athletesCSV.LastIndexOf(Environment.NewLine);
-            athletesCSV = athletesCSV.Substring(0, lastNewLine - 1);
-
             string filename = $"{_path}\\create\\athletes.csv";
-            FileUtil.CreateNewCSV(filename, athletesCSV);
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(athletesCSV));
         }
 
         public void CreateLicense(string _path)
@@ -79,11 +76,8 @@ namespace AMImporter
                     sb => sb.ToString()
                     );
 
-            int lastNewLine = licensesCSV.LastIndexOf(Environment.NewLine);
-            licensesCSV = licensesCSV.Substring(0, lastNewLine - 1);
-
             string filename = $"{_path}\\create\\licenses.csv";
-            FileUtil.CreateNewCSV(filename, licensesCSV);
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(licensesCSV));
         }
 
         public void CreateParticipation(string _path, TimeSchedule timeSchedule)
@@ -112,11 +106,8 @@ namespace AMImporter
                     sb => sb.ToString()
                     );
 
-            int lastNewLine = participationCSV.LastIndexOf(Environment.NewLine);
-            participationCSV = participationCSV.Substring(0, lastNewLine - 1);
-
             string filename = $"{_path}\\create\\participations.csv";
-            FileUtil.CreateNewCSV(filename, participationCSV);
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV));
         }
 
         public void CreateCompetitor(string _path)
@@ -142,11 +133,8 @@ namespace AMImporter
                     sb => sb.ToString()
                     );
 
-            int lastNewLine = competitorCSV.LastIndexOf(Environment.NewLine);
-            competitorCSV = competitorCSV.Substring(0, lastNewLine - 1);
-
             string filename = $"{_path}\\create\\competitors.csv";
-            FileUtil.CreateNewCSV(filename, competitorCSV);
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(competitorCSV));
         }
     }
 }
