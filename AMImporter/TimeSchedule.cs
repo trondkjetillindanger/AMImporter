@@ -20,5 +20,10 @@ namespace AMImporter
         {
             return AMEvents.Where(x => x.Value.SAEventCategoryName == SAEventCategory && x.Value.AgeCategory.Contains(SAAgeCategoryCode)).FirstOrDefault().Value.Name;
         }
+
+        public AMEvent GetAMEvent(string SAEventCategory, string SAAgeCategoryCode)
+        {
+            return AMEvents.Where(x => x.Value.SAEventCategoryName == SAEventCategory && x.Value.AgeCategory.Contains(SAAgeCategoryCode)).FirstOrDefault().Value;
+        }
     }
 }

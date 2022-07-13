@@ -136,5 +136,39 @@ namespace AMImporter
             string filename = $"{_path}\\create\\competitors.csv";
             CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(competitorCSV));
         }
+
+        public void CreateRecord(string _path, TimeSchedule timeSchedule)
+        {
+
+            string recordsCSV = "'db_athletes.firstname*';'db_athletes.lastname*';'db_athletes.birthdate';'db_eventtypes.standardname*';'db_records.date';'db_records.value';'db_records.wind';'db_records.seasonflag';'db_records.alltimeflag'" + Environment.NewLine;
+            recordsCSV = recordsCSV +
+                (from el in root.Descendants("Competitor")
+                 let name = (string?)el.Element("Name")?.Element("Family")
+                 let person = el.Element("Person")
+                 let entry = el.Element("Entry")
+                 let givenname = (string?)person.Element("Name")?.Element("Given")
+                 let familyname = (string?)person.Element("Name")?.Element("Family")
+                 let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, (string)entry.Element("Exercise").Attribute("name"))
+                 orderby name
+                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6}';'{7}';'';'Y';'N'{8}",
+             givenname,
+             familyname,
+             (string?)person.Element("BirthDate")?.Attribute("year"),
+             (string)((int?)person.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
+             (string)((int?)person.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
+             timeSchedule.GetAMEvent((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode")).EventTypeStandardName,
+             athleteSB.Item2,
+             athleteSB.Item1,
+             Environment.NewLine))
+                .Distinct()
+                .Aggregate(
+                    new StringBuilder(),
+                    (sb, s) => sb.Append(s),
+                    sb => sb.ToString()
+                    );
+
+            string filename = $"{_path}\\create\\records.csv";
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(recordsCSV));
+        }
     }
 }

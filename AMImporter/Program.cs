@@ -32,6 +32,7 @@ class EventImporter
         athletes.CreateLicense(path);
         athletes.CreateParticipation(path, timeSchedule);
         athletes.CreateCompetitor(path);
+        athletes.CreateRecord(path, timeSchedule);
         string zipfilename = $"{path}\\create.zip";
         File.Delete(zipfilename);
         ZipFile.CreateFromDirectory(path+"\\create", zipfilename);
