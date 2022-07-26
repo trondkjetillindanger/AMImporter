@@ -71,18 +71,20 @@ namespace AMImporter
 
                 HtmlDocument htmlSnippet = new HtmlDocument();
                 htmlSnippet.LoadHtml(Html);
-                string result = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[2]/text()").FirstOrDefault().GetDirectInnerText();
-                string dateValue = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[5]/text()").FirstOrDefault().GetDirectInnerText();
-                string pattern = "dd.MM.yy";
-                string date = null;
-                DateTime parsedDate;
-                if (DateTime.TryParseExact(dateValue, pattern, null,
-                                                      DateTimeStyles.None, out parsedDate))
+                string result = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[2]/text()")?.FirstOrDefault()?.GetDirectInnerText();
+                if (result != null)
                 {
-                    date = parsedDate.ToString("yyyy-MM-dd");
+                    string dateValue = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[5]/text()").FirstOrDefault().GetDirectInnerText();
+                    string pattern = "dd.MM.yy";
+                    string date = null;
+                    DateTime parsedDate;
+                    if (DateTime.TryParseExact(dateValue, pattern, null,
+                                                          DateTimeStyles.None, out parsedDate))
+                    {
+                        date = parsedDate.ToString("yyyy-MM-dd");
+                    }
+                    return (result, date);
                 }
-
-                return (result, date);
             }
             return (null, null);
         }

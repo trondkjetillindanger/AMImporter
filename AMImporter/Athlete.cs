@@ -150,7 +150,7 @@ namespace AMImporter
                  let familyname = (string?)person.Element("Name")?.Element("Family")
                  let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, (string)entry.Element("Exercise").Attribute("name"))
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6}';'{7}';'';'Y';'N'{8}",
+                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'';'1';'0'{8}",
              givenname,
              familyname,
              (string?)person.Element("BirthDate")?.Attribute("year"),

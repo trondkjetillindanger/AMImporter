@@ -2,7 +2,7 @@
   "profiles": {
     "AMImporter": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\temp\\si-stevne1\\NIF XML_eventid_370172.XML\""
+      "commandLineArgs": "\"C:\\temp\\Vindsprint 2022\\NIF XML_eventid_368569.XML\""
     }
   }
 }
