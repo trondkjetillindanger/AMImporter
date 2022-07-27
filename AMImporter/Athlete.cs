@@ -21,7 +21,7 @@ namespace AMImporter
         {
             //var teamEnum = from el in root.Descendants("Person") select new { teamName = el.Attribute("clubName").Value, hasclub = teams.Contains(el.Attribute("clubName").Value) };
             return (from el in root.Descendants("Person")
-                           select el.Attribute("clubName").Value).Distinct().ToList<string>();
+                           select el.Attribute("clubName").Value.TrimEnd(' ')).Distinct().ToList<string>();
         }
 
         public void Create(string _path)
@@ -32,15 +32,15 @@ namespace AMImporter
                  let name = (string?)el.Element("Name")?.Element("Family")
                  orderby name
                  select String.Format("'{0}';'{1}';'{2}';'{3}';'{4}';'{5}-{6}-{7}';'Norway';'{8}';'Norwegian Athletic Federation'{9}",
-             (string?)el.Element("Name")?.Element("Given")+ (string?)el.Element("Name")?.Element("Family")+(string?)el.Attribute("clubName"),
-             (string?)el.Element("Name")?.Element("Given"),
-             (string?)el.Element("Name")?.Element("Family"),
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' ') + (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' ') + (string?)el.Attribute("clubName").Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' '),
              "",
              (string?)el.Attribute("sex") == "K" ? "W" : "M",
              (string?)el.Element("BirthDate")?.Attribute("year"),
              (string)((int?)el.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
              (string)((int?)el.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-             (string?)el.Attribute("clubName"),
+             (string?)el.Attribute("clubName").Value.TrimEnd(' '),
              Environment.NewLine))
                 .Distinct()
                 .Aggregate(
@@ -61,13 +61,13 @@ namespace AMImporter
                  let name = (string?)el.Element("Name")?.Element("Family")
                  orderby name
                  select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'Norwegian Athletic Federation';'{6}';''{7}",
-             (string?)el.Element("Name")?.Element("Given"),
-             (string?)el.Element("Name")?.Element("Family"),
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' '),
              (string?)el.Element("BirthDate")?.Attribute("year"),
              (string)((int?)el.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
              (string)((int?)el.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-             (string?)el.Attribute("clubName"),
-             (string?)el.Element("Name")?.Element("Given") + (string?)el.Element("Name")?.Element("Family") + (string?)el.Attribute("clubName"),
+             (string?)el.Attribute("clubName").Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' ') + (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' ') + (string?)el.Attribute("clubName").Value.TrimEnd(' '),
              Environment.NewLine))
                 .Distinct()
                 .Aggregate(
@@ -86,16 +86,16 @@ namespace AMImporter
             string participationCSV = "'db_athletes.firstname';'db_athletes.lastname';'db_licenses.licensenumber';'db_events.name';'db_rounds.name';'db_competitions.name';'db_categories.name';'db_federations.name'" + Environment.NewLine;
             participationCSV = participationCSV +
                 (from el in root.Descendants("Competitor")
-                 let name = (string?)el.Element("Name")?.Element("Family")
+                 let name = (string?)el.Element("Name")?.Element("Family").Value.TrimEnd(' ')
                  let person = el.Element("Person")
                  let entry = el.Element("Entry")
-                 let givenname = (string?)person.Element("Name")?.Element("Given")
-                 let familyname = (string?)person.Element("Name")?.Element("Family")
+                 let givenname = (string?)person.Element("Name")?.Element("Given").Value.TrimEnd(' ')
+                 let familyname = (string?)person.Element("Name")?.Element("Family").Value.TrimEnd(' ')
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'SI-stevne 1';'{4}';'Norwegian Athletic Federation'{5}",
+                 select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Vindsprint 2022';'{4}';'Norwegian Athletic Federation'{5}",
              givenname,
              familyname,
-             givenname + familyname + (string?)person.Attribute("clubName"),
+             givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
              timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode")),
              (string)entry.Element("EntryClass").Attribute("shortName"),
              Environment.NewLine))
@@ -117,14 +117,14 @@ namespace AMImporter
                 (from el in root.Descendants("Person")
                  let name = (string?)el.Element("Name")?.Element("Family")
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'SI-stevne 1';'Norwegian Athletic Federation';'';'{6}'{7}",
-             (string?)el.Element("Name")?.Element("Given"),
-             (string?)el.Element("Name")?.Element("Family"),
+                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'Vindsprint 2022';'Norwegian Athletic Federation';'';'{6}'{7}",
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' '),
              (string?)el.Element("BirthDate")?.Attribute("year"),
              (string)((int?)el.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
              (string)((int?)el.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-             (string?)el.Element("Name")?.Element("Given") + (string?)el.Element("Name")?.Element("Family") + (string?)el.Attribute("clubName"),
-             (string?)el.Element("Name")?.Element("Family") + ", " + (string?)el.Element("Name")?.Element("Given"),
+             (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' ') + (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' ') + (string?)el.Attribute("clubName").Value.TrimEnd(' '),
+             (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' ') + ", " + (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
              Environment.NewLine))
                 .Distinct()
                 .Aggregate(
@@ -150,15 +150,16 @@ namespace AMImporter
                  let familyname = (string?)person.Element("Name")?.Element("Family")
                  let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, (string)entry.Element("Exercise").Attribute("name"))
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'';'1';'0'{8}",
-             givenname,
-             familyname,
+                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'{8}';'1';'0'{9}",
+             givenname.TrimEnd(' '),
+             familyname.TrimEnd(' '),
              (string?)person.Element("BirthDate")?.Attribute("year"),
              (string)((int?)person.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
              (string)((int?)person.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
              timeSchedule.GetAMEvent((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode")).EventTypeStandardName,
-             athleteSB.Item2,
-             athleteSB.Item1,
+             athleteSB.Date,
+             athleteSB.Time,
+             athleteSB.Wind,
              Environment.NewLine))
                 .Distinct()
                 .Aggregate(
