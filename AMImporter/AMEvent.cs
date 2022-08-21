@@ -14,5 +14,6 @@ namespace AMImporter
         public string Time { get; set; }
         public List<string> AgeCategory { get; set; }
         public string EventTypeStandardName { get; set; }
+        public string SAEventName { get; set; }
     }
 }

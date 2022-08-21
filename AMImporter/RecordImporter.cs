@@ -12,8 +12,13 @@ namespace AMImporter
 {
     public static class RecordImporter
     {
-        public static AMRecordDTO GetAthleteSB(string firstname, string lastname, string eventName)
+        public static AMRecordDTO GetAthleteSB(string firstname, string lastname, string eventName, string ageCode)
         {
+            if (new string[] { "G10", "J10" }.Contains(ageCode))
+            {
+                return new AMRecordDTO();
+            }
+            //Thread.Sleep(500);
             string[] names = firstname.Split(' ');
 
             string athleteId = GetAthleteId(firstname, lastname);
@@ -21,11 +26,19 @@ namespace AMImporter
             if (athleteId == null && names[0]!=firstname)
             {
                 athleteId = GetAthleteId(names[0], lastname); // All names might not have been included in stats.
+                if (athleteId == null)
+                {
+                    athleteId = GetAthleteId(names[0], names[1]); // Different order of last names might have been used.
+                }
+                if (athleteId == null && names.Length>=3)
+                {
+                    athleteId = GetAthleteId(names[0], names[2]); // Different order of last names might have been used.
+                }
             }
 
             if (athleteId == null)
             {
-                Console.WriteLine($"No stats found for {firstname} {lastname}");
+                Console.WriteLine($"No stats found for {firstname} {lastname}. Athlete is not found.");
                 return new AMRecordDTO();
             }
             return GetAthleteSBById(athleteId, eventName);
@@ -33,7 +46,7 @@ namespace AMImporter
 
         private static string GetAthleteId(string firstname, string lastname)
         {
-            string fullname = lastname + ", " + firstname;
+            string fullname = lastname.TrimEnd() + ", " + firstname.TrimEnd();
             using (WebClient web1 = new WebClient())
             {
                 string myParameters = $"cmd=SearchAthlete&showathlete={lastname}";
@@ -44,16 +57,20 @@ namespace AMImporter
 
                 HtmlDocument htmlSnippet = new HtmlDocument();
                 htmlSnippet.LoadHtml(Html);
+                var links = htmlSnippet.DocumentNode.SelectNodes("//a[@href]");
 
-                foreach (HtmlNode link in htmlSnippet.DocumentNode.SelectNodes("//a[@href]"))
+                if (links != null)
                 {
-                    HtmlAttribute att = link.Attributes["href"];
-                    if (att.OwnerNode.InnerHtml.Replace(" ", "") == fullname.Replace(" ", ""))
+                    foreach (HtmlNode link in htmlSnippet.DocumentNode.SelectNodes("//a[@href]"))
                     {
-                        Uri uri = new Uri(new Uri(baseUrl), att.Value);
-                        string queryString = uri.Query;
-                        var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
-                        return queryDictionary["showathl"];
+                        HtmlAttribute att = link.Attributes["href"];
+                        if (att.OwnerNode.InnerHtml.Replace(" ", "") == fullname.Replace(" ", "") || att.OwnerNode.InnerHtml.Replace(" ", "") == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ",""))
+                        {
+                            Uri uri = new Uri(new Uri(baseUrl), att.Value);
+                            string queryString = uri.Query;
+                            var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
+                            return queryDictionary["showathl"];
+                        }
                     }
                 }
             }
@@ -68,8 +85,17 @@ namespace AMImporter
                 string myParameters = "listtype=Best&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
                 //web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
-                string Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?"+myParameters);
+                string Html = null;
 
+                try
+                {
+                    Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
+                }
+                catch (Exception e)
+                {
+                    Thread.Sleep(5000); // Wait and try again.
+                    Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
+                }
 
                 HtmlDocument htmlSnippet = new HtmlDocument();
                 htmlSnippet.LoadHtml(Html);
@@ -114,6 +140,10 @@ namespace AMImporter
                     {
                         record.Date = parsedDate.ToString("yyyy-MM-dd");
                     }
+                }
+                else
+                {
+                    Console.WriteLine($"No result found for athlete id {athleteId}  in event {eventName}.");
                 }
             }
             return record;
