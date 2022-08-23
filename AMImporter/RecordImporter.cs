@@ -41,7 +41,16 @@ namespace AMImporter
                 Console.WriteLine($"No stats found for {firstname} {lastname}. Athlete is not found.");
                 return new AMRecordDTO();
             }
-            return GetAthleteSBById(athleteId, eventName);
+            var athleteSB = GetAthleteSBById(athleteId, eventName, true);
+            if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
+            {
+                athleteSB = GetAthleteSBById(athleteId, eventName, false);
+            }
+            if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
+            {
+                return new AMRecordDTO();
+            }
+            return athleteSB;
         }
 
         private static string GetAthleteId(string firstname, string lastname)
@@ -52,8 +61,15 @@ namespace AMImporter
                 string myParameters = $"cmd=SearchAthlete&showathlete={lastname}";
                 web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
-                string Html = web1.UploadString(baseUrl+"/UtoverSok.php", myParameters);
-
+                string Html = null;
+                try { 
+                    Html = web1.UploadString(baseUrl+"/UtoverSok.php", myParameters);
+                }
+                catch (Exception e)
+                {
+                    Thread.Sleep(5000); // Wait and try again.
+                    Html = web1.UploadString(baseUrl + "/UtoverSok.php", myParameters);
+                }
 
                 HtmlDocument htmlSnippet = new HtmlDocument();
                 htmlSnippet.LoadHtml(Html);
@@ -77,73 +93,87 @@ namespace AMImporter
             return null;
         }
 
-        private static AMRecordDTO GetAthleteSBById(string athleteId, string eventName)
+        private static AMRecordDTO Parse(string result)
         {
-            AMRecordDTO record = new AMRecordDTO();
-            using (WebClient web1 = new WebClient())
+            var record = new AMRecordDTO();
+            int windStartIndex = result.IndexOf('(');
+            int windEndIndex = result.IndexOf(')');
+
+            if (windStartIndex > -1)
             {
-                string myParameters = "listtype=Best&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
-                //web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
-                string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
-                string Html = null;
-
-                try
+                record.Time = result.Substring(0, windStartIndex);
+                string Wind = result.Substring(windStartIndex + 1, windEndIndex - windStartIndex - 1);
+                if (double.TryParse(Wind, out double number))
                 {
-                    Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
-                }
-                catch (Exception e)
-                {
-                    Thread.Sleep(5000); // Wait and try again.
-                    Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
-                }
-
-                HtmlDocument htmlSnippet = new HtmlDocument();
-                htmlSnippet.LoadHtml(Html);
-                string result = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[2]/text()")?.FirstOrDefault()?.GetDirectInnerText();
-
-                if (result != null)
-                {
-                    int windStartIndex = result.IndexOf('(');
-                    int windEndIndex = result.IndexOf(')');
-
-                    if (windStartIndex > -1)
+                    if (number <= 2.0)
                     {
-                        record.Time = result.Substring(0, windStartIndex);
-                        string Wind = result.Substring(windStartIndex + 1, windEndIndex - windStartIndex - 1);
-                        if (double.TryParse(Wind, out double number))
-                        {
-                            if (number <= 2.0)
-                            {
-                                record.Wind = Wind;
-                            }
-                            else
-                            {
-                                return new AMRecordDTO();
-                            }
-                        }
-                        else
-                        {
-                            return new AMRecordDTO();
-                        }
+                        record.Wind = Wind;
+                        record.IllegalWind = false;
                     }
                     else
                     {
-                        record.Time = result;
-                    }
-
-                    string dateValue = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table//td[5]/text()").FirstOrDefault().GetDirectInnerText();
-                    string datePattern = "dd.MM.yy";
-                    string date = null;
-                    DateTime parsedDate;
-                    if (DateTime.TryParseExact(dateValue, datePattern, null,
-                                                          DateTimeStyles.None, out parsedDate))
-                    {
-                        record.Date = parsedDate.ToString("yyyy-MM-dd");
+                        record.Wind = Wind;
+                        record.IllegalWind = true;
                     }
                 }
                 else
                 {
+                    return null;
+                }
+            }
+            else
+            {
+                record.Time = result;
+            }
+            return record;
+        }
+
+        private static AMRecordDTO GetAthleteSBById(string athleteId, string eventName, bool bestOnly = true)
+        {
+            AMRecordDTO record = null;
+            using (WebClient web1 = new WebClient())
+            {
+                string myParameters = "listtype=All&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
+                if (bestOnly)
+                {
+                    myParameters = "listtype=Best&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
+                }
+                //web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
+                string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
+                string Html = null;
+
+
+                Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
+
+
+                HtmlDocument htmlSnippet = new HtmlDocument();
+                htmlSnippet.LoadHtml(Html);
+                var eventResultNode = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table")?.FirstOrDefault();
+                int? numberOfResultsForEvent = eventResultNode?.SelectNodes(".//tr")?.Count();
+                string result = null;
+                for (int i=2;i<= numberOfResultsForEvent;i++)
+                {
+                    result = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table/tr[{i}]/td[2]/text()")?.FirstOrDefault()?.GetDirectInnerText();
+                    record = Parse(result);
+                    if (record != null && (record.IllegalWind==null || !record.IllegalWind.Value))
+                    {
+                        string dateValue = htmlSnippet.DocumentNode.SelectNodes($"//div[@id='Øvelse' and h4='{eventName}']/table/tr[{i}]/td[5]/text()").FirstOrDefault().GetDirectInnerText();
+                        string datePattern = "dd.MM.yy";
+                        string date = null;
+                        DateTime parsedDate;
+                        if (DateTime.TryParseExact(dateValue, datePattern, null,
+                                                              DateTimeStyles.None, out parsedDate))
+                        {
+                            record.Date = parsedDate.ToString("yyyy-MM-dd");
+                        }
+                        break;
+                    }
+                }
+              
+                if (record == null)
+                {
                     Console.WriteLine($"No result found for athlete id {athleteId}  in event {eventName}.");
+                    return new AMRecordDTO();
                 }
             }
             return record;

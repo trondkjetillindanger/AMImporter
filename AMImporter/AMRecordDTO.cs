@@ -11,5 +11,6 @@ namespace AMImporter
         public string Time { get; set; }
         public string Wind { get; set; }
         public string Date { get; set; }
+        public bool? IllegalWind { get; set; }
     }
 }
