@@ -91,12 +91,14 @@ namespace AMImporter
                  let entry = el.Element("Entry")
                  let givenname = (string?)person.Element("Name")?.Element("Given").Value.TrimEnd(' ')
                  let familyname = (string?)person.Element("Name")?.Element("Family").Value.TrimEnd(' ')
+                 let amEventName = timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode"))
+                 where amEventName != null
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Vindsprint 2022';'{4}';'Norwegian Athletic Federation'{5}",
+                 select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Høstlekene 2022';'{4}';'Norwegian Athletic Federation'{5}",
              givenname,
              familyname,
              givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
-             timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode")),
+             amEventName,
              (string)entry.Element("EntryClass").Attribute("shortName"),
              Environment.NewLine))
                 .Distinct()
@@ -110,6 +112,38 @@ namespace AMImporter
             CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV));
         }
 
+        public void CreateParticipationWithoutEvent(string _path, TimeSchedule timeSchedule)
+        {
+
+            string participationCSV = "'db_athletes.firstname';'db_athletes.lastname';'db_licenses.licensenumber';'db_events.name';'db_rounds.name';'db_competitions.name';'db_categories.name';'db_federations.name'" + Environment.NewLine;
+            participationCSV = participationCSV +
+                (from el in root.Descendants("Competitor")
+                 let name = (string?)el.Element("Name")?.Element("Family").Value.TrimEnd(' ')
+                 let person = el.Element("Person")
+                 let entry = el.Element("Entry")
+                 let givenname = (string?)person.Element("Name")?.Element("Given").Value.TrimEnd(' ')
+                 let familyname = (string?)person.Element("Name")?.Element("Family").Value.TrimEnd(' ')
+                 let amEventName = timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode"))
+                 where amEventName == null
+                 orderby name
+                 select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Høstlekene 2022';'{4}';'Norwegian Athletic Federation'{5}",
+             givenname,
+             familyname,
+             givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
+             (string)entry.Element("Exercise").Attribute("name")+" "+ (string)entry.Element("EntryClass").Attribute("classCode"),
+             (string)entry.Element("EntryClass").Attribute("shortName"),
+             Environment.NewLine))
+                .Distinct()
+                .Aggregate(
+                    new StringBuilder(),
+                    (sb, s) => sb.Append(s),
+                    sb => sb.ToString()
+                    );
+
+            string filename = $"{_path}\\create\\participations_not_found.csv";
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV));
+        }
+
         public void CreateCompetitor(string _path)
         {
             string competitorCSV = "'db_athletes.firstname*';'db_athletes.lastname*';'db_athletes.birthdate*';'db_licenses.licensenumber*';'db_competitions.name*';'db_federations.name*';'db_competitors.bib';'db_competitors.displayname'" + Environment.NewLine;
@@ -117,7 +151,7 @@ namespace AMImporter
                 (from el in root.Descendants("Person")
                  let name = (string?)el.Element("Name")?.Element("Family")
                  orderby name
-                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'Vindsprint 2022';'Norwegian Athletic Federation';'';'{6}'{7}",
+                 select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'Høstlekene 2022';'Norwegian Athletic Federation';'';'{6}'{7}",
              (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
              (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' '),
              (string?)el.Element("BirthDate")?.Attribute("year"),
@@ -150,7 +184,7 @@ namespace AMImporter
                  let eventCategory = (string)entry.Element("Exercise").Attribute("name")
                  let givenname = (string?)person.Element("Name")?.Element("Given")
                  let familyname = (string?)person.Element("Name")?.Element("Family")
-                 let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, timeSchedule.GetAMEvent(eventCategory, ageCode).SAEventName??eventCategory, ageCode)
+                 let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, timeSchedule.GetAMEvent(eventCategory, ageCode)?.SAEventName??eventCategory, ageCode)
                  orderby name
                  select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'{8}';'1';'0'{9}",
              givenname.TrimEnd(' '),
@@ -158,7 +192,7 @@ namespace AMImporter
              (string?)person.Element("BirthDate")?.Attribute("year"),
              (string)((int?)person.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
              (string)((int?)person.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-             timeSchedule.GetAMEvent(eventCategory, ageCode).EventTypeStandardName,
+             timeSchedule.GetAMEvent(eventCategory, ageCode)?.EventTypeStandardName,
              athleteSB.Date,
              athleteSB.Time,
              athleteSB.Wind,

@@ -13,7 +13,9 @@ namespace AMImporter
         public TimeSchedule(string _path)
         {
             string fullFileName = _path + "\\create\\" + filename;
-            AMEvents = File.ReadLines(fullFileName).Select(line => line.Split(';')).ToDictionary(line => line[2], line => new AMEvent { Session = line[0], Name = line[2], Time = line[1], SAEventCategoryName = line[3], AgeCategory = line[4].Split(',').ToList(), EventTypeStandardName = line[5], SAEventName = (line.Length==7)?line[6]:null });
+            AMEvents = File.ReadLines(fullFileName).Select(
+                line => line.Split(';')).ToDictionary(line => line[2], line => new AMEvent { Session = line[0], Name = line[2], Time = line[1], SAEventCategoryName = line[3], AgeCategory = line[4].Split(',').ToList(), EventTypeStandardName = line[5], SAEventName = (line.Length==7)?line[6]:null }
+            );
         }
 
         public string GetAMEventName(string SAEventCategory, string SAAgeCategoryCode)
@@ -21,7 +23,10 @@ namespace AMImporter
             string AMEventName = null;
             try
             {
-                AMEventName = AMEvents.Where(x => x.Value.SAEventCategoryName == SAEventCategory && x.Value.AgeCategory.Contains(SAAgeCategoryCode)).FirstOrDefault().Value.Name;
+                var amEventNames = AMEvents.Where(x => x.Value.SAEventCategoryName == SAEventCategory && x.Value.AgeCategory.Contains(SAAgeCategoryCode));
+                if (amEventNames.Any()) {
+                    AMEventName = amEventNames.FirstOrDefault().Value.Name;
+                }
             }
             catch (Exception e)
             {

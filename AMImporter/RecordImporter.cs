@@ -142,8 +142,21 @@ namespace AMImporter
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
                 string Html = null;
 
-
-                Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
+                bool isLoaded = false;
+                do
+                {
+                    try
+                    {
+                        Html = web1.DownloadString(baseUrl + "/UtoverStatistikk.php?" + myParameters);
+                        isLoaded = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Can not contact stats server. Waiting a bit and trying again...");
+                        isLoaded = false;
+                        Thread.Sleep(5000);
+                    }                   
+                } while (!isLoaded);
 
 
                 HtmlDocument htmlSnippet = new HtmlDocument();
