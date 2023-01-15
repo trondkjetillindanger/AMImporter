@@ -10,6 +10,7 @@ namespace AMImporter
     public class Team
     {
         private XElement root = null;
+        private List<iSonenParticipationDTO> ISonenParticipations = null;
         private List<string> teamNames = null;
         private string fullFileName = null;
         string filename = "teams.csv";
@@ -17,14 +18,26 @@ namespace AMImporter
         {
             root = _root;
             fullFileName = _path + "\\" + filename;
+            teamNames = GetTeamNames(_path);
+        }
+
+        public Team(List<iSonenParticipationDTO> _ISonenParticipations, string _path)
+        {
+            ISonenParticipations = _ISonenParticipations;
+            fullFileName = _path + "\\" + filename;
+            teamNames = GetTeamNames(_path);
+        }
+
+        private List<string> GetTeamNames(string _path)
+        {
             var teamEnum = from l in File.ReadAllLines(fullFileName)
-                              let x = l.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
-                                        .Skip(2).SkipLast(2)
-                              select new
-                              {
-                                  teamName = (string)x.First().Replace("'","")
-                              };
-            teamNames = teamEnum.Select(x => (string)x.teamName).Distinct().ToList<string>();
+                           let x = l.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                                     .Skip(2).SkipLast(2)
+                           select new
+                           {
+                               teamName = (string)x.First().Replace("'", "")
+                           };
+            return teamEnum.Select(x => (string)x.teamName).Distinct().ToList<string>();
         }
 
         public List<string> FindMissing(List<string> _teamNames)

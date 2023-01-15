@@ -21,5 +21,10 @@ namespace AMImporter
         {
             return AMCategories[AMAbbreviation];
         }
+
+        public string GetAMAbbreviation(string AMName)
+        {
+            return AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower()).First().Key;
+        }
     }
 }

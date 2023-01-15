@@ -2,7 +2,7 @@
   "profiles": {
     "AMImporter": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\AM\\Dropbox\\Stevner\\2022\\Ute\\Høstlekene\\SAImport\\NIF XML_eventid_369678 (1).XML\""
+      "commandLineArgs": "\"D:\\AM\\Dropbox\\Stevner\\2023\\Inne\\Jærcup 1\\SAImport\\Deltakerliste.csv\""
     }
   }
 }

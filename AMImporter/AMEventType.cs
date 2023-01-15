@@ -13,7 +13,7 @@ namespace AMImporter
         public AMEventType(string _path)
         {
             string fullFileName = _path + "\\create\\" + filename;
-            AMEventTypes = File.ReadLines(fullFileName).Select(line => line.Split(';')).Where(line => line[2]=="'O'" && line[17]=="'en'").ToDictionary(line => line[13].Replace("'",""), line => line[3].Replace("'", ""));
+            AMEventTypes = File.ReadLines(fullFileName).Select(line => line.Split(';')).Where(line => line[2]=="'I'" && line[17]=="'en'").ToDictionary(line => line[13].Replace("'",""), line => line[3].Replace("'", ""));
             AMEventTypes.Remove("db_eventtypes.standardname*");
         }
 
