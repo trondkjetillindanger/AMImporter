@@ -41,6 +41,36 @@ namespace AMImporter
                 Console.WriteLine($"No stats found for {firstname} {lastname}. Athlete is not found.");
                 return new AMRecordDTO();
             }
+            var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
+
+            return athleteSB;
+        }
+
+        public static AMRecordDTO GetValidAthleteSBPrioritized(string athleteId, string eventName, bool outdoorPrioritized = true)
+        {
+            if (outdoorPrioritized)
+            {
+                var athleteSB = GetValidAthleteOutdoor(athleteId, eventName);
+                if (athleteSB.Time==null)
+                {
+                    return GetValidAthleteIndoor(athleteId, eventName);
+                }
+                return athleteSB;
+            }
+            else
+            {
+                var athleteSB = GetValidAthleteIndoor(athleteId, eventName);
+                if (athleteSB.Time == null)
+                {
+                    return GetValidAthleteOutdoor(athleteId, eventName);
+                }
+                return athleteSB;
+            }
+            return new AMRecordDTO();
+        }
+
+        public static AMRecordDTO GetValidAthleteOutdoor(string athleteId, string eventName)
+        {
             var athleteSB = GetAthleteSBById(athleteId, eventName, true);
             if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
             {
@@ -51,6 +81,11 @@ namespace AMImporter
                 return new AMRecordDTO();
             }
             return athleteSB;
+        }
+
+        public static AMRecordDTO GetValidAthleteIndoor(string athleteId, string eventName)
+        {
+            return GetAthleteSBById(athleteId, eventName, true, false);
         }
 
         private static string GetAthleteId(string firstname, string lastname)
@@ -80,7 +115,26 @@ namespace AMImporter
                     foreach (HtmlNode link in htmlSnippet.DocumentNode.SelectNodes("//a[@href]"))
                     {
                         HtmlAttribute att = link.Attributes["href"];
-                        if (att.OwnerNode.InnerHtml.Replace(" ", "") == fullname.Replace(" ", "") || att.OwnerNode.InnerHtml.Replace(" ", "") == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ",""))
+                        var fullnameFromStat = att.OwnerNode.InnerHtml.Replace(" ", "");
+                        var names = att.OwnerNode.InnerHtml.Split(' ').Select(x => x.TrimEnd(',')).ToArray<string>();
+                        string alt1FullnameFromStat = $"{names[0]},{names[1]}";
+                        string alt2FullnameFromStat = $"{names[2]},{names[1]}";
+
+                        if (fullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || fullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ","").ToLower())
+                        {
+                            Uri uri = new Uri(new Uri(baseUrl), att.Value);
+                            string queryString = uri.Query;
+                            var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
+                            return queryDictionary["showathl"];
+                        }
+                        if (alt1FullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || alt1FullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ", "").ToLower())
+                        {
+                            Uri uri = new Uri(new Uri(baseUrl), att.Value);
+                            string queryString = uri.Query;
+                            var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
+                            return queryDictionary["showathl"];
+                        }
+                        if (alt2FullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || alt2FullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ", "").ToLower())
                         {
                             Uri uri = new Uri(new Uri(baseUrl), att.Value);
                             string queryString = uri.Query;
@@ -128,15 +182,15 @@ namespace AMImporter
             return record;
         }
 
-        private static AMRecordDTO GetAthleteSBById(string athleteId, string eventName, bool bestOnly = true)
+        private static AMRecordDTO GetAthleteSBById(string athleteId, string eventName, bool bestOnly = true, bool outdoor = true)
         {
             AMRecordDTO record = null;
             using (WebClient web1 = new WebClient())
             {
-                string myParameters = "listtype=All&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
+                string myParameters = $"listtype=All&outdoor={(outdoor?"Y":"N")}&showseason=2022&showevent=0&showathl=" + athleteId;
                 if (bestOnly)
                 {
-                    myParameters = "listtype=Best&outdoor=Y&showseason=2022&showevent=0&showathl=" + athleteId;
+                    myParameters = $"listtype=Best&outdoor={(outdoor ? "Y" : "N")}&showseason=2022&showevent=0&showathl=" + athleteId;
                 }
                 //web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";

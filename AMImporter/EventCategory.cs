@@ -18,7 +18,7 @@ namespace AMImporter
             timeSchedule.AMEvents.Values.ToList().ForEach( amEvent => {
                 amEvent.AgeCategory.ForEach(ageCategoryAbbreviation =>
                 {
-                    string newLine = String.Format("'{0}';'COOP Jærcup 8';'{1}';'Norwegian Athletic Federation'",
+                    string newLine = String.Format("'{0}';'COOP Jærcup 1';'{1}';'Norwegian Athletic Federation'",
                         amEvent.Name,
                         amCategory.GetAMName(ageCategoryAbbreviation));
                     eventCategoriesCSV = eventCategoriesCSV + newLine + Environment.NewLine;
