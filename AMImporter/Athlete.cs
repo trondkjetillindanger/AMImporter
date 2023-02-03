@@ -168,7 +168,7 @@ namespace AMImporter
                      let amEventName = timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode"))
                      where amEventName != null
                      orderby name
-                     select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'COOP Jærcup 1';'{4}';'Norwegian Athletic Federation'{5}",
+                     select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Sørvestmesterskapet 2023';'{4}';'Norwegian Athletic Federation'{5}",
                  givenname,
                  familyname,
                  givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
@@ -188,7 +188,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
 
-                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{amEventName}';'*';'COOP Jærcup 1';'{x.EventCategory}';'Norwegian Athletic Federation'{Environment.NewLine}";
+                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{amEventName}';'*';'Sørvestmesterskapet 2023';'{x.EventCategory}';'Norwegian Athletic Federation'{Environment.NewLine}";
                 }).Distinct()
                  .Aggregate(
                         new StringBuilder(),
@@ -217,7 +217,7 @@ namespace AMImporter
                      let amEventName = timeSchedule.GetAMEventName((string)entry.Element("Exercise").Attribute("name"), (string)entry.Element("EntryClass").Attribute("classCode"))
                      where amEventName == null
                      orderby name
-                     select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'COOP Jærcup 1';'{4}';'Norwegian Athletic Federation'{5}",
+                     select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'Sørvestmesterskapet 2023';'{4}';'Norwegian Athletic Federation'{5}",
                  givenname,
                  familyname,
                  givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
@@ -237,7 +237,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
                     if (string.IsNullOrEmpty(amEventName)) {
-                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{x.Event} {ageCode}';'*';'COOP Jærcup 1';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'Norwegian Athletic Federation'{Environment.NewLine}";
+                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{x.Event} {ageCode}';'*';'Sørvestmesterskapet 2023';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'Norwegian Athletic Federation'{Environment.NewLine}";
                     }
                     else
                     {
@@ -265,7 +265,7 @@ namespace AMImporter
                     (from el in root.Descendants("Person")
                      let name = (string?)el.Element("Name")?.Element("Family")
                      orderby name
-                     select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'COOP Jærcup 1';'Norwegian Athletic Federation';'';'{6}'{7}",
+                     select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'Sørvestmesterskapet 2023';'Norwegian Athletic Federation';'';'{6}'{7}",
                  (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' '),
                  (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' '),
                  (string?)el.Element("BirthDate")?.Attribute("year"),
@@ -284,7 +284,7 @@ namespace AMImporter
             else
             {
                 competitorCSV = competitorCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName)).Select(x =>
-                     $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'COOP Jærcup 1';'Norwegian Athletic Federation';'';'{x.LastName.TrimEnd(' ')}, {x.FirstName.TrimEnd(' ')}'{Environment.NewLine}"
+                     $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'Sørvestmesterskapet 2023';'Norwegian Athletic Federation';'';'{x.LastName.TrimEnd(' ')}, {x.FirstName.TrimEnd(' ')}'{Environment.NewLine}"
                  ).Distinct()
                   .Aggregate(
                          new StringBuilder(),

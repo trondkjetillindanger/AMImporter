@@ -24,6 +24,16 @@ namespace AMImporter
 
         public string GetAMAbbreviation(string AMName)
         {
+            if (AMName=="Jenter 18-19" || AMName == "Gutter 18-19")
+            {
+                AMName = AMName.Replace('-', '/');
+            }
+
+            if (AMName.Contains("veteran"))
+            {
+                AMName = AMName.Replace("veteran", "veteraner");
+            }
+
             return AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower()).First().Key;
         }
     }
