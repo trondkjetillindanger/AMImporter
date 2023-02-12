@@ -2,7 +2,7 @@
   "profiles": {
     "AMImporter": {
       "commandName": "Project",
-      "commandLineArgs": "\"D:\\AM\\Dropbox\\Stevner\\2023\\Inne\\Sørvest\\SAImport\\Deltakerliste.csv\""
+      "commandLineArgs": "\"D:\\AM\\Dropbox\\Stevner\\2023\\Inne\\Jærcup 2\\SAImport\\Deltakerliste.csv\""
     }
   }
 }

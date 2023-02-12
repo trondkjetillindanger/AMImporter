@@ -13,7 +13,7 @@ namespace AMImporter
         public Competition(string _path)
         {
             string fullFileName = _path + "\\create\\" + filename;
-            CompetitionDTO = File.ReadLines(fullFileName).Select(line => line.Split(';')).Where(line => line[0]!= "'db_federations.name'").Select(line => new AMCompetitionDTO { Name = line[2], FederationName = line[0], Location = line[4], StartDate = line[6], EndDate = line[7] }).FirstOrDefault();
+            CompetitionDTO = File.ReadLines(fullFileName).Select(line => line.Split(';')).Where(line => line[0]!= "'db_federations.name'").Select(line => new AMCompetitionDTO { Name = line[2].Replace("'",""), FederationName = line[0].Replace("'", ""), Location = line[4], StartDate = line[6], EndDate = line[7] }).FirstOrDefault();
         }
     }
 }

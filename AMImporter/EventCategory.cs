@@ -10,7 +10,7 @@ namespace AMImporter
     public class EventCategory
     {
         public virtual AMCategory amCategory { get; set; }
-        public void Create(string _path, TimeSchedule timeSchedule)
+        public void Create(string _path, TimeSchedule timeSchedule, Competition competition)
         {
             amCategory = new AMCategory(_path);
             int seqno = 1;
@@ -18,9 +18,11 @@ namespace AMImporter
             timeSchedule.AMEvents.Values.ToList().ForEach( amEvent => {
                 amEvent.AgeCategory.ForEach(ageCategoryAbbreviation =>
                 {
-                    string newLine = String.Format("'{0}';'Sørvestmesterskapet 2023';'{1}';'Norwegian Athletic Federation'",
+                    string newLine = String.Format("'{0}';'{1}';'{2}';'{3}'",
                         amEvent.Name,
-                        amCategory.GetAMName(ageCategoryAbbreviation));
+                        competition.CompetitionDTO.Name,
+                        amCategory.GetAMName(ageCategoryAbbreviation),
+                        competition.CompetitionDTO.FederationName);
                     eventCategoriesCSV = eventCategoriesCSV + newLine + Environment.NewLine;
                 });
             });

@@ -25,7 +25,7 @@ class EventImporter
         eventImporter.Create(path, competition, timeSchedule);
         eventImporter.CreateRound(path, competition, timeSchedule);
         EventCategory eventCategory = new EventCategory();
-        eventCategory.Create(path, timeSchedule);
+        eventCategory.Create(path, timeSchedule, competition);
 
         XElement root = null;
         List<iSonenParticipationDTO> ISonenParticipations = null;
@@ -40,9 +40,9 @@ class EventImporter
             teams.CreateMissing(missingTeams, path);
             athletes.Create(path);
             athletes.CreateLicense(path);
-            athletes.CreateParticipation(path, timeSchedule);
-            athletes.CreateParticipationWithoutEvent(path, timeSchedule);
-            athletes.CreateCompetitor(path);
+            athletes.CreateParticipation(path, timeSchedule, competition);
+            athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
+            athletes.CreateCompetitor(path, competition);
             athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);
@@ -58,9 +58,9 @@ class EventImporter
             teams.CreateMissing(missingTeams, path);
             athletes.Create(path);
             athletes.CreateLicense(path);
-            athletes.CreateParticipation(path, timeSchedule);
-            athletes.CreateParticipationWithoutEvent(path, timeSchedule);
-            athletes.CreateCompetitor(path);
+            athletes.CreateParticipation(path, timeSchedule, competition);
+            athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
+            athletes.CreateCompetitor(path, competition);
             athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);

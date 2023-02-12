@@ -18,7 +18,7 @@ namespace AMImporter
                 (from el in timeSchedule.AMEvents.Values.ToList<AMEvent>()
                  let time = el.Time
                  orderby time
-                 select String.Format("{0};{1};'{2}';'{3}';'';'{4}';'{5}';'C';'2'{6}",
+                 select String.Format("'{0}';'{1}';'{2}';'{3}';'';'{4}';'{5}';'C';'2'{6}",
              competition.CompetitionDTO.FederationName,
              competition.CompetitionDTO.Name,
              el.Name,
