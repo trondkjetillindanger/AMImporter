@@ -50,31 +50,43 @@ namespace AMImporter
         {
             if (outdoorPrioritized)
             {
-                var athleteSB = GetValidAthleteOutdoor(athleteId, eventName);
+                var athleteSB = GetValidAthleteOutdoor(athleteId, eventName, 2021, 2022);
                 if (athleteSB.Time==null)
                 {
-                    return GetValidAthleteIndoor(athleteId, eventName);
+                    return GetValidAthleteIndoor(athleteId, eventName, 2022, 2023);
                 }
                 return athleteSB;
             }
             else
             {
-                var athleteSB = GetValidAthleteIndoor(athleteId, eventName);
+                var athleteSB = GetValidAthleteIndoor(athleteId, eventName, 2022, 2023);
                 if (athleteSB.Time == null)
                 {
-                    return GetValidAthleteOutdoor(athleteId, eventName);
+                    return GetValidAthleteOutdoor(athleteId, eventName, 2021, 2022);
                 }
                 return athleteSB;
             }
             return new AMRecordDTO();
         }
 
-        public static AMRecordDTO GetValidAthleteOutdoor(string athleteId, string eventName)
+        public static AMRecordDTO GetValidAthleteOutdoor(string athleteId, string eventName, int fromSeason, int toSeason)
         {
-            var athleteSB = GetAthleteSBById(athleteId, eventName, true);
-            if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
+            AMRecordDTO athleteSB = null;
+            for (int season = toSeason; season >= fromSeason; season--)
             {
-                athleteSB = GetAthleteSBById(athleteId, eventName, false);
+                athleteSB = GetAthleteSBByIdAndSeason(athleteId, eventName, season+"", true);
+                if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
+                {
+                    athleteSB = GetAthleteSBByIdAndSeason(athleteId, eventName, season + "", false);
+                }
+                if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
+                {
+                    continue;
+                }
+                else
+                {
+                    return athleteSB;
+                }
             }
             if (athleteSB.IllegalWind != null && athleteSB.IllegalWind.Value)
             {
@@ -83,9 +95,20 @@ namespace AMImporter
             return athleteSB;
         }
 
-        public static AMRecordDTO GetValidAthleteIndoor(string athleteId, string eventName)
+        public static AMRecordDTO GetValidAthleteIndoor(string athleteId, string eventName, int fromSeason, int toSeason)
         {
-            return GetAthleteSBById(athleteId, eventName, true, false);
+            AMRecordDTO athleteSB = null;
+            for (int season = toSeason; season >= fromSeason; season--)
+            {
+                athleteSB = GetAthleteSBByIdAndSeason(athleteId, eventName, season + "", true, false);
+                if (athleteSB.Time==null)
+                {
+                    continue;
+                }
+
+                return athleteSB;
+            }
+            return new AMRecordDTO();
         }
 
         private static string GetAthleteId(string firstname, string lastname)
@@ -182,15 +205,15 @@ namespace AMImporter
             return record;
         }
 
-        private static AMRecordDTO GetAthleteSBById(string athleteId, string eventName, bool bestOnly = true, bool outdoor = true)
+        private static AMRecordDTO GetAthleteSBByIdAndSeason(string athleteId, string eventName, string season, bool bestOnly = true, bool outdoor = true)
         {
             AMRecordDTO record = null;
             using (WebClient web1 = new WebClient())
             {
-                string myParameters = $"listtype=All&outdoor={(outdoor?"Y":"N")}&showseason=2022&showevent=0&showathl=" + athleteId;
+                string myParameters = $"listtype=All&outdoor={(outdoor?"Y":"N")}&showseason={season}&showevent=0&showathl=" + athleteId;
                 if (bestOnly)
                 {
-                    myParameters = $"listtype=Best&outdoor={(outdoor ? "Y" : "N")}&showseason=2022&showevent=0&showathl=" + athleteId;
+                    myParameters = $"listtype=Best&outdoor={(outdoor ? "Y" : "N")}&showseason={season}&showevent=0&showathl=" + athleteId;
                 }
                 //web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
