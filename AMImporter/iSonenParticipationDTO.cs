@@ -29,5 +29,9 @@ namespace AMImporter
                 _eventCategory = value;  
             } 
         }
+
+        public string EventDate { get; set; }
+        public string EmailRegistrant { get; set; }
+        public string Email { get; set; }
     }
 }
