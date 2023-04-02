@@ -7,9 +7,9 @@ using CsvHelper.Configuration;
 
 namespace AMImporter
 {
-    public class iSonenParticipationDTOMap : ClassMap<iSonenParticipationDTO>
+    public class iSonenParticipationMap : ClassMap<iSonenParticipation>
     {
-        public iSonenParticipationDTOMap()
+        public iSonenParticipationMap()
         {
             Map(p => p.FirstName).Name("Fornavn");
             Map(p => p.LastName).Name("Etternavn");
@@ -21,7 +21,7 @@ namespace AMImporter
             Map(p => p.EventDate).Name("Dato");
             Map(p => p.EmailRegistrant).Name("E-post påmelder");
             Map(p => p.Email).Name("E-post");
-
+            Map(p => p.Id).Name("Person ID");
         }
     }
 }

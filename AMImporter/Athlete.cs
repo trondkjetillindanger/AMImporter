@@ -10,7 +10,7 @@ namespace AMImporter
     public class Athlete
     {
         private XElement root = null;
-        private List<iSonenParticipationDTO> ISonenParticipations = null;
+        private List<iSonenParticipation> ISonenParticipations = null;
         private Team teams = null;
         private AMCategory amCategory = null;
         public Athlete(XElement _root, Team _teams)
@@ -19,7 +19,7 @@ namespace AMImporter
             teams = _teams;
         }
 
-        public Athlete(List<iSonenParticipationDTO> _ISonenParticipations, Team _teams, AMCategory _amCategory)
+        public Athlete(List<iSonenParticipation> _ISonenParticipations, Team _teams, AMCategory _amCategory)
         {
             ISonenParticipations = _ISonenParticipations;
             teams = _teams;
@@ -140,7 +140,7 @@ namespace AMImporter
             else
             {
                 licensesCSV = licensesCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName)).Select(x =>
-                    $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.Team.TrimEnd(' ')}';'Norwegian Athletic Federation';'{x.FirstName + x.LastName + x.Team}';''{Environment.NewLine}"
+                    $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.Team.TrimEnd(' ')}';'Norwegian Athletic Federation';'{x.FirstName + x.LastName + x.Team}';'{x.Bib}'{Environment.NewLine}"
                 ).Distinct()
                  .Aggregate(
                         new StringBuilder(),
@@ -361,6 +361,21 @@ namespace AMImporter
 
             string filename = $"{_path}\\create\\records.csv";
             CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(recordsCSV));
+        }
+
+        public void AssignBib()
+        {
+            int Bib = 1;
+            var participations = ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName.TrimEnd(' '))).GroupBy(y => $"{y.Team}{y.LastName}{y.FirstName}"); 
+            participations.OrderBy(y => y.Key).ToList().ForEach(x =>
+            {
+                ISonenParticipations.Where(q => $"{q.Team}{q.LastName}{q.FirstName}"==(x.Key)).ToList().ForEach(w =>
+                {
+                    w.Bib = Bib;
+                });
+                Bib++;
+            });
+
         }
     }
 }

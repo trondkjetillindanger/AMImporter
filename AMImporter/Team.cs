@@ -10,7 +10,7 @@ namespace AMImporter
     public class Team
     {
         private XElement root = null;
-        private List<iSonenParticipationDTO> ISonenParticipations = null;
+        private List<iSonenParticipation> ISonenParticipations = null;
         private List<string> teamNames = null;
         private string fullFileName = null;
         string filename = "teams.csv";
@@ -21,7 +21,7 @@ namespace AMImporter
             teamNames = GetTeamNames(_path);
         }
 
-        public Team(List<iSonenParticipationDTO> _ISonenParticipations, string _path)
+        public Team(List<iSonenParticipation> _ISonenParticipations, string _path)
         {
             ISonenParticipations = _ISonenParticipations;
             fullFileName = _path + "\\" + filename;

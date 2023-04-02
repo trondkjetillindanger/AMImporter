@@ -30,7 +30,7 @@ class EventImporter
         eventCategory.Create(path, timeSchedule, competition);
 
         XElement root = null;
-        List<iSonenParticipationDTO> ISonenParticipations = null;
+        List<iSonenParticipation> ISonenParticipations = null;
 
         if (!isCSV)
         {
@@ -59,6 +59,7 @@ class EventImporter
             var missingTeams = teams.FindMissing(teamNames);
             teams.CreateMissing(missingTeams, path);
             athletes.Create(path);
+            athletes.AssignBib();
             athletes.CreateLicense(path);
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
@@ -107,8 +108,8 @@ class EventImporter
                             .Select(y => {
                                 return new AMImporter.Callroom.Participant() {
                                     participant_name = y.Key,
-                                    participant_bib = "1",
-                                    participant_id = "1",
+                                    participant_bib = y.First().Bib+"",
+                                    participant_id = y.First().Id,
                                     participant_team = y.First().Team,
                                     competition_id = "1",
                                     email = y.First().Email,

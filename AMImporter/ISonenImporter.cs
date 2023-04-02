@@ -11,7 +11,7 @@ namespace AMImporter
 {
     public class ISonenImporter
     {
-        public static List<iSonenParticipationDTO> import(string filename)
+        public static List<iSonenParticipation> import(string filename)
         {
             var configuration = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -24,8 +24,8 @@ namespace AMImporter
                 using (var textReader = new StreamReader(fs, Encoding.UTF8))
                 using (var csv = new CsvReader(textReader, configuration))
                 {
-                    csv.Context.RegisterClassMap<iSonenParticipationDTOMap>();
-                    return csv.GetRecords<iSonenParticipationDTO>().ToList();
+                    csv.Context.RegisterClassMap<iSonenParticipationMap>();
+                    return csv.GetRecords<iSonenParticipation>().ToList();
                 }
             }
         }

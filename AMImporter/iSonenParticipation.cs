@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AMImporter
 {
-    public class iSonenParticipationDTO
+    public class iSonenParticipation
     {
         private string _eventCategory = null;
         public string FirstName { get; set; }
@@ -33,5 +33,8 @@ namespace AMImporter
         public string EventDate { get; set; }
         public string EmailRegistrant { get; set; }
         public string Email { get; set; }
+        public string Id { get; set; }
+        public int? Bib { get; set; }
+
     }
 }
