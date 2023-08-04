@@ -14,19 +14,19 @@ namespace AMImporter.Callroom
         {
             events = timeSchedule.AMEvents.Values.Select(x =>
             {
-                var eventParticipations = iSonenParticipations.Where(y => y.Event == x.SAEventCategoryName && x.AgeCategory.Select(z => eventCategory.amCategory.GetAMName(z)).Contains(y.EventCategory)).ToList();
+                var eventParticipations = iSonenParticipations.Where(y => y.Event == x.SAEventCategoryName && x.AgeCategory.Select(z => eventCategory.amCategory.GetAMName(z).ToLower()).Contains(y.EventCategory.ToLower())).ToList();
                 var date = eventParticipations.Any() ? eventParticipations.Select(y => y.EventDate).First() : null;
                 if (date == null)
                 {
                     return new AMImporter.Callroom.@Event()
                     {
                         @event = x.Name,
-                        event_id = x.Id + "",
+                        event_id = x.Id.Value,
                         event_time = "null"
                     };
                 };
 
-                DateTime dateTime = DateTime.ParseExact(date, "dd.mm.yyyy", CultureInfo.InvariantCulture).Add(TimeSpan.ParseExact(x.Time, "hh\\:mm\\:ss", CultureInfo.InvariantCulture));
+                DateTime dateTime = DateTime.ParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture).Add(TimeSpan.ParseExact(x.Time, "hh\\:mm\\:ss", CultureInfo.InvariantCulture));
                 //string dateTimeString = $"{date}T{x.Time}";mm:
                 //DateTime dateTime = DateTime.Parse(dateTimeString);
                 dateTime.AddHours(2);
@@ -34,12 +34,12 @@ namespace AMImporter.Callroom
                 {
                     @event = x.Name,
                     agegroup = String.Join(", ", x.AgeCategory),
-                    callroomregistration_closed_time = dateTime.AddHours(2).AddMinutes(5).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
+                    callroomregistration_closed_time = dateTime.AddHours(-1).AddMinutes(5).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
                     callroomregistration_open_time = dateTime.AddDays(-1).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
-                    callroomregistration_time = dateTime.AddHours(2).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
-                    competition_id = "1",
+                    callroomregistration_time = dateTime.AddHours(-1).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
+                    competition_id = 1,
                     enterStadium_time = "null",
-                    event_id = x.Id + "",
+                    event_id = x.Id.Value,
                     event_time = dateTime.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss"),
                 };
             }).ToList<AMImporter.Callroom.@Event>();

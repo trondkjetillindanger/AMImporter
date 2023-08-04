@@ -34,7 +34,7 @@ namespace AMImporter
                 AMName = AMName.Replace("veteran", "veteraner");
             }
 
-            return AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower()).First().Key;
+            return AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower().Trim()).First().Key;
         }
     }
 }

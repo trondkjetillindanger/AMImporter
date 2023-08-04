@@ -10,8 +10,8 @@ namespace AMImporter.Callroom
     {
         public string @event { get; set; }
         public string agegroup { get; set; }
-        public string event_id { get; set; }
-        public string competition_id { get; set; }
+        public int event_id { get; set; }
+        public int competition_id { get; set; }
         public string event_time { get; set; }
         public string callroomregistration_open_time { get; set; }
         public string callroomregistration_closed_time { get; set; }

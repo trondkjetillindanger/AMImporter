@@ -18,10 +18,10 @@ namespace AMImporter.Callroom
                                     return new AMImporter.Callroom.Participant()
                                     {
                                         participant_name = $"{y.First().FirstName} {y.First().LastName}",
-                                        participant_bib = y.First().Bib + "",
-                                        participant_id = y.First().Bib + "",
+                                        participant_bib = y.First().Bib.Value,
+                                        participant_id = y.First().Bib.Value,
                                         participant_team = y.First().Team,
-                                        competition_id = "1",
+                                        competition_id = 1,
                                         email = y.First().Email,
                                         email2 = y.First().EmailRegistrant,
                                         events = y.Select(q =>
@@ -30,7 +30,7 @@ namespace AMImporter.Callroom
                                             return new AMImporter.Callroom.Participation()
                                             {
                                             //event_id = q.Event,
-                                                event_id = eventsByNameAndCategory.Any() ? eventsByNameAndCategory.First()?.Id + "" : "-1",
+                                                event_id = eventsByNameAndCategory.Any() ? eventsByNameAndCategory.FirstOrDefault().Id.Value:-1,
                                                 callroomstatus = false,
                                                 callroomstatus_modificationtime = "null",
                                                 year_best = "null",

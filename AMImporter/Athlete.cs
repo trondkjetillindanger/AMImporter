@@ -318,7 +318,7 @@ namespace AMImporter
                      let eventCategory = (string)entry.Element("Exercise").Attribute("name")
                      let givenname = (string?)person.Element("Name")?.Element("Given")
                      let familyname = (string?)person.Element("Name")?.Element("Family")
-                     let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, timeSchedule.GetAMEvent(eventCategory, ageCode)?.SAEventName ?? eventCategory, ageCode)
+                     let athleteSB = RecordImporter.GetAthleteSB(givenname, familyname, timeSchedule.GetAMEvent(eventCategory, ageCode)?.SAEventName ?? eventCategory, ageCode, null)
                      orderby name
                      select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'{8}';'1';'0'{9}",
                  givenname.TrimEnd(' '),
@@ -344,7 +344,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEvent = timeSchedule.GetAMEvent(x.Event, ageCode );
                     var standardName = amEvent?.EventTypeStandardName;
-                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), amEvent?.SAEventName ?? x.Event, ageCode);
+                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), amEvent?.SAEventName ?? x.Event, ageCode, x.BirthDate);
                     if (athleteSB.Time==null)
                     {
                         return "";

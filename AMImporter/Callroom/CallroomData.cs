@@ -22,9 +22,12 @@ namespace AMImporter.Callroom
             participantList.CreateCallroomParticipants(timeSchedule, iSonenParticipations, eventCategory);
             events = eventList.events;
             participants = participantList.participants;
-            string json = JsonSerializer.Serialize(this);
+            JsonSerializerOptions jso = new JsonSerializerOptions();
+            jso.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
 
-            File.WriteAllText(path + "\\create\\callroom.json", json);
+            var json = JsonSerializer.Serialize(this, jso);
+
+            File.WriteAllText(path + "\\create\\callroom.json", json, Encoding.UTF8);
         }
     }
 }

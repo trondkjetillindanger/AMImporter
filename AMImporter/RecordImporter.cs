@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -12,27 +13,143 @@ namespace AMImporter
 {
     public static class RecordImporter
     {
-        public static AMRecordDTO GetAthleteSB(string firstname, string lastname, string eventName, string ageCode)
+        private static readonly HttpClient httpClient = new HttpClient();
+
+        class RecordItem
+        {
+            public string Result { get; set; }
+            public string Date { get; set; }
+        }
+        class Records
+        {
+            public RecordItem PB { get; set; }
+            public RecordItem SB { get; set; }
+        }
+
+        class Athlete
+        {
+            public string? AthleteId { get; set; }
+            public string? OtAthleteId { get; set; }
+            public string? FirstName { get; set; }
+            public string? MiddleName { get; set; }
+            public string? LastName { get; set; }
+            public string? DateOfBirth { get; set; }
+            public string? Gender { get; set; }
+            public string? Nationality { get; set; }
+        }
+
+
+        public async static Task<string?> GetAthleteIdAsync(string firstname, string lastname, string birthDate)
+        {
+            var values = new Dictionary<string, string>
+                          {
+                              { "FirstName", firstname },
+                              { "LastName", lastname },
+                              { "DateOfBirth", birthDate },
+                          };
+
+            string json = JsonSerializer.Serialize(values);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+
+            var response = await httpClient.PostAsync("http://www.minfriidrettsstatistikk.info/php/sokutover.php", content);
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            Athlete athlete = JsonSerializer.Deserialize<List<Athlete>>(jsonString).FirstOrDefault();
+
+            if (string.IsNullOrEmpty(athlete.AthleteId))
+            {
+                return null;
+            }
+            return athlete.AthleteId;
+        }
+
+
+
+        public async static Task<AMRecordDTO> GetAthleteSBAsync(string athleteId, string eventName, bool isOutdoor)
+        {
+            var events = new Dictionary<string, string>
+                          {
+                              { "100 meter", "4" },
+                              { "200 meter", "5" },
+                              { "400 meter", "7" },
+                              { "1500 meter", "11" },
+                              { "Spyd 400gram", "95" },
+                              { "Spyd 500gram", "139" },
+                              { "Spyd 600gram", "96" },
+                              { "Spyd 700gram", "97" }
+                          };
+            var eventId = events.GetValueOrDefault(eventName);
+            if (eventId == null)
+            {
+                return new AMRecordDTO();
+            }
+
+            var values = new Dictionary<string, string>
+                          {
+                              { "Athlete_Id", athleteId },
+                              { "Event_Id", eventId },
+                              { "Outdoor", isOutdoor?"Y":"N" }
+                          };
+
+
+            string json = JsonSerializer.Serialize(values);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+
+            var response = await httpClient.PostAsync("http://www.minfriidrettsstatistikk.info/php/hentresultater.php", content);
+
+            var jsonString = await response.Content.ReadAsStringAsync();
+            Records records = JsonSerializer.Deserialize<Records>(jsonString);
+
+            if (records == null || records.SB == null)
+            {
+                Console.WriteLine($"No stats found for {athleteId} in {eventName}.");
+                return new AMRecordDTO();
+            }
+            return new AMRecordDTO() { Date = records.SB.Date, Time = records.SB.Result, Wind = "0.0" };
+        }
+
+        public static AMRecordDTO GetAthleteSB(string firstname, string lastname, string eventName, string ageCode, string birthDate, bool useApi = true)
         {
             if (new string[] { "G10", "J10" }.Contains(ageCode))
             {
                 return new AMRecordDTO();
             }
-            //Thread.Sleep(500);
+            Thread.Sleep(1000);
             string[] names = firstname.Split(' ');
+            string? athleteId = null;
 
-            string athleteId = GetAthleteId(firstname, lastname);
-
-            if (athleteId == null && names[0]!=firstname)
+            if (useApi)
             {
-                athleteId = GetAthleteId(names[0], lastname); // All names might not have been included in stats.
-                if (athleteId == null)
+                athleteId = GetAthleteIdAsync(firstname, lastname, birthDate).Result;
+                if (athleteId == null && names[0] != firstname)
                 {
-                    athleteId = GetAthleteId(names[0], names[1]); // Different order of last names might have been used.
+                    athleteId = GetAthleteIdAsync(names[0], lastname, birthDate).Result; // All names might not have been included in stats.
+                    if (athleteId == null)
+                    {
+                        athleteId = GetAthleteIdAsync(names[0], names[1], birthDate).Result; // Different order of last names might have been used.
+                    }
+                    if (athleteId == null && names.Length >= 3)
+                    {
+                        athleteId = GetAthleteIdAsync(names[0], names[2], birthDate).Result; // Different order of last names might have been used.
+                    }
                 }
-                if (athleteId == null && names.Length>=3)
+            }
+            else { 
+                athleteId = GetAthleteId(firstname, lastname);
+
+                if (athleteId == null && names[0]!=firstname)
                 {
-                    athleteId = GetAthleteId(names[0], names[2]); // Different order of last names might have been used.
+                    athleteId = GetAthleteId(names[0], lastname); // All names might not have been included in stats.
+                    if (athleteId == null)
+                    {
+                        athleteId = GetAthleteId(names[0], names[1]); // Different order of last names might have been used.
+                    }
+                    if (athleteId == null && names.Length>=3)
+                    {
+                        athleteId = GetAthleteId(names[0], names[2]); // Different order of last names might have been used.
+                    }
                 }
             }
 
@@ -41,7 +158,8 @@ namespace AMImporter
                 Console.WriteLine($"No stats found for {firstname} {lastname}. Athlete is not found.");
                 return new AMRecordDTO();
             }
-            var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
+            //var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
+            var athleteSB = GetAthleteSBAsync(athleteId, eventName, true).Result;
 
             return athleteSB;
         }

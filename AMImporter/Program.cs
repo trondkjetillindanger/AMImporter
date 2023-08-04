@@ -58,8 +58,8 @@ class EventImporter
             var teamNames = athletes.GetTeams();
             var missingTeams = teams.FindMissing(teamNames);
             teams.CreateMissing(missingTeams, path);
-            athletes.Create(path);
             athletes.AssignBib();
+            athletes.Create(path);
             athletes.CreateLicense(path);
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);

@@ -24,7 +24,7 @@ namespace AMImporter
              el.Name,
              amEventType.GetAMEventTypeAbbreviation(el.EventTypeStandardName),
              el.EventTypeStandardName,
-             seqno++,
+             el.Id,
              Environment.NewLine))
                 .Distinct()
                 .Aggregate(
