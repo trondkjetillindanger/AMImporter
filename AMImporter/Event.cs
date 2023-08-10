@@ -16,7 +16,7 @@ namespace AMImporter
             string eventsCSV = "'db_federations.name*';'db_competitions.name*';'db_events.name*';'db_events.abbreviation';'db_events.info';'db_eventtypes.standardname*';'db_events.seqno';'db_events.medals';'db_events.status'" + Environment.NewLine;
             eventsCSV = eventsCSV +
                 (from el in timeSchedule.AMEvents.Values.ToList<AMEvent>()
-                 let time = el.Time
+                 let time = el.Time.Split('|').First()
                  orderby time
                  select String.Format("'{0}';'{1}';'{2}';'{3}';'';'{4}';'{5}';'C';'2'{6}",
              competition.CompetitionDTO.FederationName,
@@ -42,13 +42,15 @@ namespace AMImporter
             string roundsCSV = "'db_events.name*';'db_competitions.name*';'db_federations.name*';'db_rounds.combinedeventtype';'db_rounds.seqno';'db_sessions.name';'db_rounds.name';'db_rounds.abbreviation';'db_rounds.info';'db_rounds.timescheduled';'db_rounds.heatduration';'db_rounds.timeofficial';'db_rounds.customdistance';'db_rounds.jumpoffpossible';'db_seedingalgorithms.name';'db_qualifyingalgorithms.name';'db_rounds.qualificationparameters';'db_rounds.participantsperteam';'db_rounds.participantsforteampoints';'db_teampointcalculationalgorithms.name';'db_rounds.seedingparameters';'db_pointcalculationalgorithms.name';'db_rounds.status'" + Environment.NewLine;
             roundsCSV = roundsCSV +
                 (from el in timeSchedule.AMEvents.Values.ToList<AMEvent>()
-                 let time = el.Time
-                 orderby time
-                 select String.Format("'{0}';'{1}';'{2}';'0';'1';'{3}';'*';'';'';'{4};'5';'{4}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{5}",
+                 let time = el.Time.Split('|').First()
+                 let roundname = el.Time.Split('|').Last()??"*"
+                 orderby time.First()
+                 select String.Format("'{0}';'{1}';'{2}';'0';'1';'{3}';'{4}';'';'';'{5};'5';'{5}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{6}",
              el.Name,
              competition.CompetitionDTO.Name,
              competition.CompetitionDTO.FederationName,
              el.Session,
+             roundname,
              time,
              Environment.NewLine))
                 .Distinct()

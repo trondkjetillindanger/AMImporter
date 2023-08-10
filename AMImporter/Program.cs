@@ -70,7 +70,7 @@ class EventImporter
             ZipFile.CreateFromDirectory(path + "\\create", zipfilename);
         }
 
-        CallroomData callroomData = new CallroomData();
-        callroomData.Create(path, timeSchedule, ISonenParticipations, eventCategory);
+        //CallroomData callroomData = new CallroomData();
+        //callroomData.Create(path, timeSchedule, ISonenParticipations, eventCategory);
     }
 }
