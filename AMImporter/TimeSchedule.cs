@@ -19,13 +19,11 @@ namespace AMImporter
 
             int eventId = 0;
             var AMEventGroups = AMEvents.Values.GroupBy(x => x.Name);
-            AMEventGroups.SelectMany(x => {
-                eventId++;
-                return x.ToList<AMEvent>();
-            }).ToList().ForEach(y =>
+            AMEventGroups.ToList().ForEach(x =>
             {
-                y.Id = eventId;
-            });            
+                eventId++;
+                x.ToList().ForEach(y => y.Id = eventId);
+            });           
         }
 
         public string GetAMEventName(string SAEventCategory, string SAAgeCategoryCode)
