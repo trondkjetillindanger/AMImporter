@@ -71,7 +71,7 @@ namespace AMImporter
             else
             {
                 athletesCSV = athletesCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName.TrimEnd(' '))).Select(x =>
-                    $"'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'';'{(NorwegianToUKGender(x.Gender))}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'Norway';'{x.Team.TrimEnd(' ')}';'Norwegian Athletic Federation'{Environment.NewLine}"
+                    $"'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'';'{(NorwegianToUKGender(x.Gender))}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'Norway';'{x.Team.Replace("&","og").TrimEnd(' ')}';'Norwegian Athletic Federation'{Environment.NewLine}"
                 ).Distinct()
                  .Aggregate(
                         new StringBuilder(),
@@ -127,7 +127,7 @@ namespace AMImporter
                  (string?)el.Element("BirthDate")?.Attribute("year"),
                  (string)((int?)el.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
                  (string)((int?)el.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-                 (string?)el.Attribute("clubName").Value.TrimEnd(' '),
+                 (string?)el.Attribute("clubName").Value.Replace("&","og").TrimEnd(' '),
                  (string?)el.Element("Name")?.Element("Given")?.Value.TrimEnd(' ') + (string?)el.Element("Name")?.Element("Family")?.Value.TrimEnd(' ') + (string?)el.Attribute("clubName").Value.TrimEnd(' '),
                  Environment.NewLine))
                     .Distinct()
@@ -140,7 +140,7 @@ namespace AMImporter
             else
             {
                 licensesCSV = licensesCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName)).Select(x =>
-                    $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.Team.TrimEnd(' ')}';'Norwegian Athletic Federation';'{x.FirstName + x.LastName + x.Team}';'{x.Bib}'{Environment.NewLine}"
+                    $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.Team.Replace("&", "og").TrimEnd(' ')}';'Norwegian Athletic Federation';'{x.FirstName + x.LastName + x.Team}';'{x.Bib}'{Environment.NewLine}"
                 ).Distinct()
                  .Aggregate(
                         new StringBuilder(),
@@ -171,7 +171,7 @@ namespace AMImporter
                      select String.Format("'{0}';'{1}';'{2}';'{3}';'*';'{4}';'{5}';'{6}'{7}",
                  givenname,
                  familyname,
-                 givenname + familyname + (string?)person.Attribute("clubName").Value.TrimEnd(' '),
+                 givenname + familyname + (string?)person.Attribute("clubName").Value.Replace("&","og").TrimEnd(' '),
                  amEventName,
                  competition.CompetitionDTO.Name,
                  (string)entry.Element("EntryClass").Attribute("shortName"),
@@ -190,7 +190,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
 
-                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{amEventName}';'*';'{competition.CompetitionDTO.Name}';'{x.EventCategory}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
+                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{amEventName}';'*';'{competition.CompetitionDTO.Name}';'{x.EventCategory}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
                 }).Distinct()
                  .Aggregate(
                         new StringBuilder(),
@@ -241,7 +241,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
                     if (string.IsNullOrEmpty(amEventName)) {
-                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{x.Event} {ageCode}';'*';'{competition.CompetitionDTO.Name}';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
+                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{x.Event} {ageCode}';'*';'{competition.CompetitionDTO.Name}';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
                     }
                     else
                     {
@@ -290,7 +290,7 @@ namespace AMImporter
             else
             {
                 competitorCSV = competitorCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName)).Select(x =>
-                     $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.TrimEnd(' ')}';'{competition.CompetitionDTO.Name}';'{competition.CompetitionDTO.FederationName}';'';'{x.LastName.TrimEnd(' ')}, {x.FirstName.TrimEnd(' ')}'{Environment.NewLine}"
+                     $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{competition.CompetitionDTO.Name}';'{competition.CompetitionDTO.FederationName}';'';'{x.LastName.TrimEnd(' ')}, {x.FirstName.TrimEnd(' ')}'{Environment.NewLine}"
                  ).Distinct()
                   .Aggregate(
                          new StringBuilder(),
@@ -366,10 +366,10 @@ namespace AMImporter
         public void AssignBib()
         {
             int Bib = 1;
-            var participations = ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName.TrimEnd(' '))).GroupBy(y => $"{y.Team}{y.LastName}{y.FirstName}"); 
+            var participations = ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName.TrimEnd(' '))).GroupBy(y => $"{y.Team.Replace("&", "og")}{y.LastName}{y.FirstName}"); 
             participations.OrderBy(y => y.Key).ToList().ForEach(x =>
             {
-                ISonenParticipations.Where(q => $"{q.Team}{q.LastName}{q.FirstName}"==(x.Key)).ToList().ForEach(w =>
+                ISonenParticipations.Where(q => $"{q.Team.Replace("&", "og")}{q.LastName}{q.FirstName}"==(x.Key)).ToList().ForEach(w =>
                 {
                     w.Bib = Bib;
                 });

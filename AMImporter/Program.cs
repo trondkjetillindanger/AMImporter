@@ -58,13 +58,13 @@ class EventImporter
             var teamNames = athletes.GetTeams();
             var missingTeams = teams.FindMissing(teamNames);
             teams.CreateMissing(missingTeams, path);
-            athletes.AssignBib();
+            //athletes.AssignBib();
             athletes.Create(path);
             athletes.CreateLicense(path);
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
             athletes.CreateCompetitor(path, competition);
-            athletes.CreateRecord(path, timeSchedule);
+            //athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);
             ZipFile.CreateFromDirectory(path + "\\create", zipfilename);

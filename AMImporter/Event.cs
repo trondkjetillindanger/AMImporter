@@ -45,7 +45,7 @@ namespace AMImporter
                  let time = el.Time.Split('|').First()
                  let roundname = el.Time.Split('|').Last()??"*"
                  orderby time.First()
-                 select String.Format("'{0}';'{1}';'{2}';'0';'1';'{3}';'{4}';'';'';'{5};'5';'{5}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{6}",
+                 select String.Format("'{0}';'{1}';'{2}';'0';'1';'{3}';'{4}';'';'';'{5}';'5';'{5}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{6}",
              el.Name,
              competition.CompetitionDTO.Name,
              competition.CompetitionDTO.FederationName,

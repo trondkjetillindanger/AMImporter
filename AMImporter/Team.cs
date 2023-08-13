@@ -35,7 +35,7 @@ namespace AMImporter
                                      .Skip(2).SkipLast(2)
                            select new
                            {
-                               teamName = (string)x.First().Replace("'", "")
+                               teamName = (string)x.First().Replace("'", "").Replace("&", "og")
                            };
             return teamEnum.Select(x => (string)x.teamName).Distinct().ToList<string>();
         }
