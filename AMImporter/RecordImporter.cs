@@ -70,9 +70,11 @@ namespace AMImporter
         {
             var events = new Dictionary<string, string>
                           {
+                              { "60 meter", "2" },
                               { "100 meter", "4" },
                               { "200 meter", "5" },
                               { "400 meter", "7" },
+                              { "600 meter", "8" },
                               { "800 meter", "9" },
                               { "1500 meter", "11" },
                               { "3000 meter", "13" },
@@ -88,7 +90,10 @@ namespace AMImporter
                               { "Høyde", "68" },
                               { "Stav", "70" },
                               { "Lengde", "71" },
+                              { "Lengde (Sone 0,5m)", "72" },
                               { "Tresteg", "75" },
+                              { "Kule 2,0Kg", "81" },
+                              { "Kule 3,0Kg", "82" },
                               { "Kule 4,0Kg", "83" },
                               { "Kule 6,0Kg", "85" },
                               { "Kule 7,26Kg", "86" },
@@ -108,6 +113,7 @@ namespace AMImporter
                               { "Spyd 600gram", "96" },
                               { "Spyd 700gram", "97" },
                               { "Spyd 800gram", "98" },
+                              { "Liten Ball 150gram", "109" }
                           };
 
             var eventId = events.GetValueOrDefault(eventName);
@@ -147,7 +153,7 @@ namespace AMImporter
             {
                 return new AMRecordDTO();
             }
-            Thread.Sleep(1000);
+            Thread.Sleep(750);
             string[] names = firstname.Split(' ');
             string? athleteId = null;
 

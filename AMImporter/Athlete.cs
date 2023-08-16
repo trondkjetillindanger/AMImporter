@@ -344,7 +344,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEvent = timeSchedule.GetAMEvent(x.Event, ageCode );
                     var standardName = amEvent?.EventTypeStandardName;
-                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), amEvent?.SAEventName ?? x.Event, ageCode, x.BirthDate);
+                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), string.IsNullOrEmpty(amEvent?.SAEventName) ? x.Event: amEvent.SAEventName, ageCode, x.BirthDate);
                     if (athleteSB.Time==null)
                     {
                         return "";
