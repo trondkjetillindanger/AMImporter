@@ -186,8 +186,9 @@ namespace AMImporter
             }
             else
             {
-                participationCSV = participationCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName) && !string.IsNullOrEmpty(y.EventCategory)).Select(x => {
-                    var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
+                //participationCSV = participationCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName) && !string.IsNullOrEmpty(y.EventCategory)).Select(x => {
+                participationCSV = participationCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.EventCategory)).Select(x => {
+                        var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
 
                     return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{amEventName}';'*';'{competition.CompetitionDTO.Name}';'{x.EventCategory}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
@@ -363,6 +364,7 @@ namespace AMImporter
             CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(recordsCSV));
         }
 
+        /*
         public void AssignBib()
         {
             int Bib = 1;
@@ -375,7 +377,7 @@ namespace AMImporter
                 });
                 Bib++;
             });
-
         }
+        */
     }
 }

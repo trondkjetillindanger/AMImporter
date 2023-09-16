@@ -16,6 +16,8 @@ namespace AMImporter
             Map(p => p.BirthDate).Name("Fødselsdato");
             Map(p => p.Gender).Name("Kjønn");
             Map(p => p.Team).Name("Klubb");
+            Map(p => p.TeamId).Name("Klubb-ID");
+            Map(p => p.GroupId).Name("Gruppe-ID");
             Map(p => p.Event).Name("Øvelse");
             Map(p => p.EventCategory).Name("Klasse");
             Map(p => p.EventDate).Name("Dato");

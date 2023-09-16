@@ -14,6 +14,8 @@ namespace AMImporter
         public string BirthDate { get; set; }
         public string Gender { get; set; }
         public string Team { get; set; }
+        public string TeamId { get; set; }
+        public string GroupId { get; set; }
         public string Event { get; set; }
         public string EventCategory { 
             get
@@ -34,7 +36,7 @@ namespace AMImporter
         public string EmailRegistrant { get; set; }
         public string Email { get; set; }
         public string Id { get; set; }
-        public int? Bib { get; set; }
+        public string Bib { get; set; }
 
     }
 }

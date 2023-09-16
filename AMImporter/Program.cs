@@ -53,6 +53,8 @@ class EventImporter
         else
         {
             ISonenParticipations = ISonenImporter.import(filename);
+            ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
+            ISonenImporter.FixRelays(ISonenParticipations);
             Team teams = new Team(ISonenParticipations, path);
             Athlete athletes = new Athlete(ISonenParticipations, teams, eventCategory.amCategory);
             var teamNames = athletes.GetTeams();
