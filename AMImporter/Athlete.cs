@@ -189,7 +189,7 @@ namespace AMImporter
                 //participationCSV = participationCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.FirstName) && !string.IsNullOrEmpty(y.EventCategory)).Select(x => {
                 participationCSV = participationCSV + ISonenParticipations.Where(y => !string.IsNullOrEmpty(y.EventCategory)).Select(x => {
                         var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
-                    var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
+                    var amEventName = timeSchedule.GetAMEventName(x.Event.TrimEnd(' '), ageCode);
 
                     return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{amEventName}';'*';'{competition.CompetitionDTO.Name}';'{x.EventCategory}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
                 }).Distinct()
@@ -242,7 +242,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEventName = timeSchedule.GetAMEventName(x.Event, ageCode);
                     if (string.IsNullOrEmpty(amEventName)) {
-                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{x.Event} {ageCode}';'*';'{competition.CompetitionDTO.Name}';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
+                        return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{x.FirstName.TrimEnd(' ') + x.LastName.TrimEnd(' ') + x.Team.Replace("&", "og").TrimEnd(' ')}';'{x.Event.TrimEnd(' ')} {ageCode}';'*';'{competition.CompetitionDTO.Name}';'{(amCategory.GetAMAbbreviation(x.EventCategory))}';'{competition.CompetitionDTO.FederationName}'{Environment.NewLine}";
                     }
                     else
                     {
@@ -345,12 +345,12 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEvent = timeSchedule.GetAMEvent(x.Event, ageCode );
                     var standardName = amEvent?.EventTypeStandardName;
-                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), string.IsNullOrEmpty(amEvent?.SAEventName) ? x.Event: amEvent.SAEventName, ageCode, x.BirthDate);
+                    var athleteSB = RecordImporter.GetAthleteSB(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), string.IsNullOrEmpty(amEvent?.SAEventName) ? x.Event.TrimEnd(' '): amEvent.SAEventName, ageCode, x.BirthDate);
                     if (athleteSB.Time==null)
                     {
                         return "";
                     }
-                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{timeSchedule.GetAMEvent(x.Event, amCategory.GetAMAbbreviation(x.EventCategory))?.EventTypeStandardName}';'{athleteSB.Date} 00:00:00';'{athleteSB.Time}';'{athleteSB.Wind}';'1';'0'{Environment.NewLine}";
+                    return $"'{x.FirstName.TrimEnd(' ')}';'{x.LastName.TrimEnd(' ')}';'{(NorwegianToUKDateFormat(x.BirthDate))}';'{timeSchedule.GetAMEvent(x.Event.TrimEnd(' '), amCategory.GetAMAbbreviation(x.EventCategory))?.EventTypeStandardName}';'{athleteSB.Date} 00:00:00';'{athleteSB.Time}';'{athleteSB.Wind}';'1';'0'{Environment.NewLine}";
                  })
                   .Distinct()
                   .Aggregate(

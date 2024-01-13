@@ -28,7 +28,7 @@ namespace AMImporter
 
         class Athlete
         {
-            public string? AthleteId { get; set; }
+            public string? Athlete_Id { get; set; }
             public string? OtAthleteId { get; set; }
             public string? FirstName { get; set; }
             public string? MiddleName { get; set; }
@@ -57,11 +57,11 @@ namespace AMImporter
             var jsonString = await response.Content.ReadAsStringAsync();
             Athlete athlete = JsonSerializer.Deserialize<List<Athlete>>(jsonString).FirstOrDefault();
 
-            if (string.IsNullOrEmpty(athlete.AthleteId))
+            if (string.IsNullOrEmpty(athlete.Athlete_Id))
             {
                 return null;
             }
-            return athlete.AthleteId;
+            return athlete.Athlete_Id;
         }
 
 
@@ -196,7 +196,7 @@ namespace AMImporter
                 return new AMRecordDTO();
             }
             //var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
-            var athleteSB = GetAthleteSBAsync(athleteId, eventName, true).Result;
+            var athleteSB = GetAthleteSBAsync(athleteId, eventName, false).Result;
 
             return athleteSB;
         }

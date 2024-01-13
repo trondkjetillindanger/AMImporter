@@ -9,7 +9,7 @@ namespace AMImporter
     public class AMEventType
     {
         string filename = "eventtypes.csv";
-        string indoorOutdoorCode = "O";
+        string indoorOutdoorCode = "I";
         public Dictionary<string, string> AMEventTypes { get; set; }
         public AMEventType(string _path)
         {
