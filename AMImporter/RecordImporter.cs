@@ -66,7 +66,7 @@ namespace AMImporter
 
 
 
-        public async static Task<AMRecordDTO> GetAthleteSBAsync(string athleteId, string eventName, bool isOutdoor)
+        public async static Task<AMRecordDTO> GetAthleteSBAsync(string athleteId, string eventName, bool? isOutdoor)
         {
             var events = new Dictionary<string, string>
                           {
@@ -125,10 +125,18 @@ namespace AMImporter
             var values = new Dictionary<string, string>
                           {
                               { "Athlete_Id", athleteId },
-                              { "Event_Id", eventId },
-                              { "Outdoor", isOutdoor?"Y":"N" }
+                              { "Event_Id", eventId }
                           };
 
+            if (isOutdoor != null)
+            {
+                values = new Dictionary<string, string>
+                              {
+                                  { "Athlete_Id", athleteId },
+                                  { "Event_Id", eventId },
+                                  { "Outdoor", isOutdoor.Value?"Y":"N" }
+                              };
+            }
 
             string json = JsonSerializer.Serialize(values);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -173,17 +181,17 @@ namespace AMImporter
                     }
                 }
             }
-            else { 
+            else {
                 athleteId = GetAthleteId(firstname, lastname);
 
-                if (athleteId == null && names[0]!=firstname)
+                if (athleteId == null && names[0] != firstname)
                 {
                     athleteId = GetAthleteId(names[0], lastname); // All names might not have been included in stats.
                     if (athleteId == null)
                     {
                         athleteId = GetAthleteId(names[0], names[1]); // Different order of last names might have been used.
                     }
-                    if (athleteId == null && names.Length>=3)
+                    if (athleteId == null && names.Length >= 3)
                     {
                         athleteId = GetAthleteId(names[0], names[2]); // Different order of last names might have been used.
                     }
@@ -196,7 +204,19 @@ namespace AMImporter
                 return new AMRecordDTO();
             }
             //var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
-            var athleteSB = GetAthleteSBAsync(athleteId, eventName, false).Result;
+            var athleteSB = GetAthleteSBAsync(athleteId, eventName, null).Result;
+            if (eventName == "Lengde") {
+                var athleteSBLengdeSone = GetAthleteSBAsync(athleteId, "Lengde(Sone 0, 5m)", null).Result;
+                if (athleteSB.Time==null)
+                {
+                    return athleteSBLengdeSone;
+                }
+                CultureInfo culture = CultureInfo.InvariantCulture;
+                if (athleteSBLengdeSone.Time != null && double.Parse(athleteSBLengdeSone.Time, culture)>double.Parse(athleteSB.Time, culture))
+                {
+                    return athleteSBLengdeSone;
+                }
+            }
 
             return athleteSB;
         }
