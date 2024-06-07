@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AMImporter
 {
-    public class iSonenParticipation
+    public class iSonenParticipationRelays
     {
         private string _eventCategory = null;
         public string FirstName { get; set; }
@@ -15,7 +15,6 @@ namespace AMImporter
         public string Gender { get; set; }
         public string Team { get; set; }
         public string TeamId { get; set; }
-        public string License { get; set; }
         public string GroupId { get; set; }
         public string Event { get; set; }
         public string EventCategory { 
@@ -39,19 +38,5 @@ namespace AMImporter
         public string Id { get; set; }
         public string Bib { get; set; }
 
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            iSonenParticipation otherPerson = (iSonenParticipation)obj;
-
-            return FirstName == otherPerson.FirstName &&
-                   LastName == otherPerson.LastName &&
-                   BirthDate == otherPerson.BirthDate &&
-                   Gender == otherPerson.Gender;
-        }
     }
 }

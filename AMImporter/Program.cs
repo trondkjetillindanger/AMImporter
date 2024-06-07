@@ -14,6 +14,11 @@ class EventImporter
     {
         // Display the number of command line arguments.
         Console.WriteLine(args[0]);
+        if (args.Length > 1)
+        {
+            Console.WriteLine(args[1]);
+            var filenameRelays = args[1];
+        }
         var filename = args[0];
         FileInfo fileInfo = new FileInfo(filename);
         bool isCSV = fileInfo.Extension==".csv"?true:false;
@@ -52,7 +57,7 @@ class EventImporter
         }
         else
         {
-            ISonenParticipations = ISonenImporter.import(filename);
+            ISonenParticipations = ISonenImporter.import(filename, null);
             ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
             ISonenImporter.FixRelays(ISonenParticipations);
             Team teams = new Team(ISonenParticipations, path);
@@ -66,7 +71,7 @@ class EventImporter
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
             athletes.CreateCompetitor(path, competition);
-            athletes.CreateRecord(path, timeSchedule);
+            //athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);
             ZipFile.CreateFromDirectory(path + "\\create", zipfilename);

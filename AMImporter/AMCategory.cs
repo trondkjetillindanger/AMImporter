@@ -29,6 +29,26 @@ namespace AMImporter
                 AMName = AMName.Replace('-', '/');
             }
 
+            if (AMName == "Gutter 15-17")
+            {
+                AMName = "Gutter 17";
+            }
+
+            if (AMName == "Jenter 15-17")
+            {
+                AMName = "Jenter 17";
+            }
+
+            if (AMName == "Gutter 18-22")
+            {
+                AMName = "MU23";
+            }
+
+            if (AMName == "Jenter 18-22")
+            {
+                AMName = "KU23";
+            }
+
             if (AMName.Contains("veteran"))
             {
                 AMName = AMName.Replace("veteran", "veteraner");

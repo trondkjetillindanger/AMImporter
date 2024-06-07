@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -22,7 +23,7 @@ namespace AMImporter
              competition.CompetitionDTO.FederationName,
              competition.CompetitionDTO.Name,
              el.Name,
-             amEventType.GetAMEventTypeAbbreviation(el.EventTypeStandardName),
+             "",//amEventType.GetAMEventTypeAbbreviation(el.EventTypeStandardName),
              el.EventTypeStandardName,
              el.Id,
              Environment.NewLine))
@@ -43,16 +44,20 @@ namespace AMImporter
             roundsCSV = roundsCSV +
                 (from el in timeSchedule.AMEvents.Values.ToList<AMEvent>()
                  let time = el.Time.Split('|').First()
-                 let roundname = el.Time.Split('|').Last()??"*"
+                 let roundname = el.Time.Split('|')[1]??"*"
+                 let seqno = el.Time.Split('|')[2]??"1"
+                 //let seqno = ExtractSeqno(roundname) // Extract number in parentheses
+                 //let roundnameWithoutSeqno = RemoveSeqno(roundname, seqno)
                  orderby time.First()
-                 select String.Format("'{0}';'{1}';'{2}';'0';'1';'{3}';'{4}';'';'';'{5}';'5';'{5}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{6}",
+                 select String.Format("'{0}';'{1}';'{2}';'0';'{7}';'{3}';'{4}';'';'';'{5}';'5';'{5}';'0';'0';'';'';'';'0';'0';'';'';'';'2'{6}",
              el.Name,
              competition.CompetitionDTO.Name,
              competition.CompetitionDTO.FederationName,
              el.Session,
              roundname,
              time,
-             Environment.NewLine))
+             Environment.NewLine,
+             seqno))
                 .Distinct()
                 .Aggregate(
                     new StringBuilder(),
@@ -62,6 +67,36 @@ namespace AMImporter
 
             string filename = $"{_path}\\create\\rounds.csv";
             CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(roundsCSV));
+        }
+
+        private int ExtractSeqno(string roundname)
+        {
+            Regex regex = new Regex(@"\((\d+)\)");
+            Match match = regex.Match(roundname);
+
+            if (match.Success)
+            {
+                string numberString = match.Groups[1].Value;
+                if (int.TryParse(numberString, out int seqno))
+                {
+                    return seqno;
+                }
+            }
+
+            return -1; 
+        }
+
+        // Helper method to remove the number within parentheses from roundname
+        private string RemoveSeqno(string roundname, int seqno)
+        {
+            if (seqno != -1)
+            {
+                return Regex.Replace(roundname, @"\(\d+\)", "").Trim();
+            }
+            else
+            {
+                return roundname;
+            }
         }
     }
 }
