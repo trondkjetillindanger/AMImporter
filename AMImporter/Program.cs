@@ -24,10 +24,57 @@ class EventImporter
         bool isCSV = fileInfo.Extension==".csv"?true:false;
 
         string currentDirectory = Path.GetDirectoryName(filename);
+        List<iSonenParticipation> ISonenParticipations = null;
 
         string path = Path.GetFullPath(currentDirectory);
         Competition competition = new Competition(path);
         TimeSchedule timeSchedule = new TimeSchedule(path);
+        if (timeSchedule.AutoGenerate)
+        {
+            ISonenParticipations = ISonenImporter.import(filename, null);
+            ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
+            ISonenImporter.FixRelays(ISonenParticipations);
+
+            var groupedParticipations = ISonenParticipations
+                .Where(p => !string.IsNullOrEmpty(p.Event))
+                .GroupBy(p => new { p.Event, p.EventCategory, EventDate = DateTime.Parse(p.EventDate) })
+                .OrderBy(g => g.Key.EventDate)
+                .ThenBy(g => g.Key.Event)  // Secondary ordering by Event
+                .ThenBy(g => g.Key.EventCategory)  // Tertiary ordering by EventCategory
+                .Select(g => new
+                {
+                    Event = g.Key.Event,
+                    EventCategory = g.Key.EventCategory,
+                    EventDate = g.Key.EventDate,
+                    Participants = g.ToList() // List of participants in this group
+                })
+                .ToList();
+
+            AMCategory amCategory = new AMCategory(path);
+            List<EventTypeCategory> categories = CsvImporter.ImportFromCsv(path);
+
+            string timescheduleCSV = string.Join(
+                                                Environment.NewLine, // Delimiter to join each line
+                                                groupedParticipations.Select(x =>
+                                                {
+                                                    var abbreviation = amCategory.GetAMAbbreviation(x.EventCategory);
+                                                    var category = categories
+                                                        .Where(y => y.SAEventName == x.Event && y.AMCategoryAbbreviation == abbreviation)
+                                                        .FirstOrDefault();
+                                                    var amEventName = category?.AMEventName;
+                                                    var saEventCategoryName = category?.SAEventCategoryName;
+
+                                                    var sessionName = Session.GetName(abbreviation);
+                                                    var eventName = $"{x.Event} {abbreviation}".Replace(" meter", "m");
+
+                                                    return $"{sessionName};00:00:00|finale|1;{eventName};{x.Event};{abbreviation};{amEventName};{saEventCategoryName}";
+                                                }));
+
+
+            string fullFileName = path + "\\create\\timeschedule.csv";
+            CSVUtil.CreateNewCSV(fullFileName, timescheduleCSV);
+            timeSchedule = new TimeSchedule(path);
+        }
         AMImporter.Event eventImporter = new AMImporter.Event();
         eventImporter.Create(path, competition, timeSchedule);
         eventImporter.CreateRound(path, competition, timeSchedule);
@@ -35,7 +82,6 @@ class EventImporter
         eventCategory.Create(path, timeSchedule, competition);
 
         XElement root = null;
-        List<iSonenParticipation> ISonenParticipations = null;
 
         if (!isCSV)
         {

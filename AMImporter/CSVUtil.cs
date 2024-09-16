@@ -8,10 +8,14 @@ namespace AMImporter
 {
     public static class CSVUtil
     {
-        public static void CreateNewCSV(string filename, string CSV)
+        public static void CreateNewCSV(string filename, string CSV, Encoding encoding = null)
         {
+            if (encoding == null)
+            {
+                encoding = Encoding.UTF8;
+            }
             File.Delete(filename);
-            using (StreamWriter sw = new StreamWriter(File.Open(filename, FileMode.CreateNew), Encoding.GetEncoding("iso-8859-1")))
+            using (StreamWriter sw = new StreamWriter(File.Open(filename, FileMode.CreateNew), encoding))
             {
                 sw.WriteLine(CSV);
             }

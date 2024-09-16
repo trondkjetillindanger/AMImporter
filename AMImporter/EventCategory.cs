@@ -28,7 +28,7 @@ namespace AMImporter
             });
 
             string filename = $"{_path}\\create\\eventcategories.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(eventCategoriesCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(eventCategoriesCSV), Encoding.GetEncoding("iso-8859-1"));
         }
     }
 }

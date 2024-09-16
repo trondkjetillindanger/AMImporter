@@ -86,7 +86,7 @@ namespace AMImporter
             teamsCSV = teamsCSV.Substring(0, lastNewLine - 1);
 
             string filename = $"{_path}\\create\\teams.csv";
-            CSVUtil.CreateNewCSV(filename, teamsCSV);
+            CSVUtil.CreateNewCSV(filename, teamsCSV, Encoding.GetEncoding("iso-8859-1"));
         }
     }
 }

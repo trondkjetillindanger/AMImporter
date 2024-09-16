@@ -80,7 +80,7 @@ namespace AMImporter
                         );
             }
             string filename = $"{_path}\\create\\athletes.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(athletesCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(athletesCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         private string NorwegianToUKGender(string gender)
@@ -149,7 +149,7 @@ namespace AMImporter
                         );
             }
             string filename = $"{_path}\\create\\licenses.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(licensesCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(licensesCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         public void CreateParticipation(string _path, TimeSchedule timeSchedule, Competition competition)
@@ -201,7 +201,7 @@ namespace AMImporter
             }
 
             string filename = $"{_path}\\create\\participations.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         public void CreateParticipationWithoutEvent(string _path, TimeSchedule timeSchedule, Competition competition)
@@ -258,7 +258,7 @@ namespace AMImporter
             }
 
             string filename = $"{_path}\\create\\participations_not_found.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(participationCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         public void CreateCompetitor(string _path, Competition competition)
@@ -301,7 +301,7 @@ namespace AMImporter
             }
 
             string filename = $"{_path}\\create\\competitors.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(competitorCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(competitorCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         public void CreateRecord(string _path, TimeSchedule timeSchedule)
@@ -381,7 +381,7 @@ namespace AMImporter
             }
 
             string filename = $"{_path}\\create\\records.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(recordsCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(recordsCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         /*

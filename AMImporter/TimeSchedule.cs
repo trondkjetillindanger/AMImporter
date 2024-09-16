@@ -9,28 +9,34 @@ namespace AMImporter
     public class TimeSchedule
     {
         string filename = "timeschedule.csv";
+        public bool AutoGenerate { get; set; } = false;
         public Dictionary<string, AMEvent> AMEvents { get; set; }
         public TimeSchedule(string _path)
         {
             string fullFileName = _path + "\\create\\" + filename;
+            if (!File.Exists(fullFileName))
+            {
+                AutoGenerate = true;
+                return;
+            }
+
             AMEvents = File.ReadLines(fullFileName)
-                .Where(line => !line.TrimStart().StartsWith("//") && line != "")
-                .Select(line => line.Split(';'))
-                .ToDictionary(
-                    line => $"{line[2]} {line[1]}",
-                    line => new AMEvent
-                    {
-                        Session = line[0],
-                        Name = line[2],
-                        Time = line[1],
-                        SAEventCategoryName = line[3],
-                        AgeCategory = line[4].Split(',').ToList(),
-                        EventTypeStandardName = line[5],
-                        SAEventName = (line.Length == 7) ? line[6] : null
-                    }
-                );
-
-
+            .Where(line => !line.TrimStart().StartsWith("//") && line != "")
+            .Select(line => line.Split(';'))
+            .ToDictionary(
+                line => $"{line[2]} {line[1]}",
+                line => new AMEvent
+                {
+                    Session = line[0],
+                    Name = line[2],
+                    Time = line[1],
+                    SAEventCategoryName = line[3],
+                    AgeCategory = line[4].Split(',').ToList(),
+                    EventTypeStandardName = line[5],
+                    SAEventName = (line.Length == 7) ? line[6] : null
+                }
+            );
+         
             int eventId = 0;
             var AMEventGroups = AMEvents.Values.GroupBy(x => x.Name);
             AMEventGroups.ToList().ForEach(x =>

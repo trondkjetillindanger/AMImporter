@@ -35,7 +35,7 @@ namespace AMImporter
                     );
 
             string filename = $"{_path}\\create\\events.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(eventsCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(eventsCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         public void CreateRound(string _path, Competition competition, TimeSchedule timeSchedule)
@@ -66,7 +66,7 @@ namespace AMImporter
                     );
 
             string filename = $"{_path}\\create\\rounds.csv";
-            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(roundsCSV));
+            CSVUtil.CreateNewCSV(filename, CSVUtil.RemoveLastNewline(roundsCSV), Encoding.GetEncoding("iso-8859-1"));
         }
 
         private int ExtractSeqno(string roundname)
