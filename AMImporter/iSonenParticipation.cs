@@ -18,6 +18,8 @@ namespace AMImporter
         public string License { get; set; }
         public string GroupId { get; set; }
         public string Event { get; set; }
+
+        //public int EstimatedEventTime => AthleticEventTimeCalculator.EstimateEventTime()
         public string EventCategory { 
             get
             {

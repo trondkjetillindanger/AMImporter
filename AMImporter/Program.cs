@@ -35,23 +35,34 @@ class EventImporter
             ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
             ISonenImporter.FixRelays(ISonenParticipations);
 
+            AMCategory amCategory = new AMCategory(path);
+            List<EventTypeCategory> categories = CsvImporter.ImportEventTypeCategory(path);
+            List<EventType> eventTypes = CsvImporter.ImportEventTypes(path);
+            var englishEventTypes = eventTypes.Where(x => x.Language == "en").ToList<EventType>();
+
             var groupedParticipations = ISonenParticipations
                 .Where(p => !string.IsNullOrEmpty(p.Event))
                 .GroupBy(p => new { p.Event, p.EventCategory, EventDate = DateTime.Parse(p.EventDate) })
                 .OrderBy(g => g.Key.EventDate)
                 .ThenBy(g => g.Key.Event)  // Secondary ordering by Event
                 .ThenBy(g => g.Key.EventCategory)  // Tertiary ordering by EventCategory
-                .Select(g => new
+                .Select(g =>
                 {
-                    Event = g.Key.Event,
-                    EventCategory = g.Key.EventCategory,
-                    EventDate = g.Key.EventDate,
-                    Participants = g.ToList() // List of participants in this group
+                    var eventType = englishEventTypes.Where(y => y.StandardName == (categories.Where(x => x.SAEventName == g.Key.Event).FirstOrDefault()?.AMEventName ?? "NA")).FirstOrDefault();
+
+                    return new
+                    {
+                        Event = g.Key.Event,
+                        EventCategory = g.Key.EventCategory,
+                        EventDate = g.Key.EventDate,
+                        Participants = g.ToList(), // List of participants in this group
+                        FieldType = eventType?.FieldType.Trim(),
+                        EventAbbreviation = eventType?.StandardAbbreviation,
+                        Distance = eventType?.Distance,
+                        EstimatedDuration = AthleticEventTimeCalculator.EstimateEventTime(eventType?.StandardAbbreviation, eventType?.FieldType, g.Count())
+                    };
                 })
                 .ToList();
-
-            AMCategory amCategory = new AMCategory(path);
-            List<EventTypeCategory> categories = CsvImporter.ImportFromCsv(path);
 
             string timescheduleCSV = string.Join(
                                                 Environment.NewLine, // Delimiter to join each line
@@ -72,8 +83,8 @@ class EventImporter
 
 
             string fullFileName = path + "\\create\\timeschedule.csv";
-            CSVUtil.CreateNewCSV(fullFileName, timescheduleCSV);
-            timeSchedule = new TimeSchedule(path);
+            //CSVUtil.CreateNewCSV(fullFileName, timescheduleCSV);
+            //timeSchedule = new TimeSchedule(path);
         }
         AMImporter.Event eventImporter = new AMImporter.Event();
         eventImporter.Create(path, competition, timeSchedule);

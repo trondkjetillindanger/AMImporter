@@ -156,7 +156,7 @@ namespace AMImporter
             var jsonString = await response.Content.ReadAsStringAsync();
             Records records = JsonSerializer.Deserialize<Records>(jsonString);
 
-            if (records == null)
+            if (records == null || (records.PB == null && records.SB == null))
             {
                 Console.WriteLine($"No stats found for {athleteId} in {eventName}.");
                 return new AMRecordDTO();
@@ -169,6 +169,21 @@ namespace AMImporter
                 //    Console.WriteLine($"No stats found for {athleteId} in {eventName}.");
                 //    return new AMRecordDTO();
                 //}
+            }
+            else
+            {
+                DateTime pbDate = DateTime.ParseExact(records.PB.Date, "dd.MM.yyyy", null);
+                DateTime? sbDate = null;
+                if (records.SB != null)
+                {
+                    sbDate = DateTime.ParseExact(records.SB.Date, "dd.MM.yyyy", null);
+                }
+                int currentYear = DateTime.Now.Year;
+
+                if ((pbDate > sbDate || sbDate == null) && pbDate.Year == currentYear)
+                {
+                    records.SB = records.PB;
+                }
             }
             return new AMRecordDTO() {                
                 SB = {
@@ -234,7 +249,7 @@ namespace AMImporter
                 return new AMRecordDTO();
             }
             //var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
-            var athleteRecord = GetAthleteRecordAsync(athleteId, eventName, null).Result;
+            var athleteRecord = GetAthleteRecordAsync(athleteId, eventName, false).Result;
             //if (eventName == "Lengde") {
             //    var athleteSBLengdeSone = GetAthleteRecordAsync(athleteId, "Lengde(Sone 0, 5m)", null).Result;
             //    if (athleteSB.SB.Time==null)
