@@ -10,16 +10,40 @@ namespace AMImporter
 
     public class AthleticEventTimeCalculator
     {
-        public static double EstimateEventTime(string eventAbbreviation, string eventType, int numParticipants, double runningTime = 0)
+        public static double EstimateEventTime(string eventAbbreviation, string eventType, int numParticipants, int? distance)
         {
-            double estimatedTime = 0;
+            int runningTime = 0;
 
             if (string.IsNullOrEmpty(eventType?.Trim()))
             {
-                return numParticipants / 8.0 * 5; // sprint
-
-                // Example: 1500m race → 5 min per heat + estimated running time
-                // estimatedTime = 5 + runningTime;
+                if (distance <= 100)
+                {
+                    return 5 + ((numParticipants-1) / 8 * 5); // sprint
+                }
+                else if (distance >= 200 && distance <= 600)
+                {
+                    return 5 + ((numParticipants - 1) / 4 * 5); // sprint
+                }
+                else
+                {
+                    if (distance >= 800 && distance <= 1500)
+                    {
+                        int heats = (numParticipants - 1) / 8;
+                        runningTime = 5*(heats+1);
+                        // Example: 1500m race → 5 min per heat + estimated running time
+                    }
+                    else if (distance > 1500 && distance <= 5000)
+                    {
+                        int heats = (numParticipants - 1) / 10;
+                        runningTime = 15 * (heats + 1);
+                    }
+                    else if (distance > 5000)
+                    {
+                        int heats = (numParticipants - 1) / 10;
+                        runningTime = 30 * (heats + 1);
+                    }
+                    return 5 + runningTime;
+                }
             }
 
             if (eventType == "H")
@@ -41,7 +65,7 @@ namespace AMImporter
                 if (eventAbbreviation == "PV")
                 {
                     // Example: 12 participants → 8 attempts each (12x8=96 attempts)
-                    estimatedTime = (numParticipants * 8 * 1.5) + 10; // 1.5 min per attempt + 10 min for winner
+                    return (numParticipants * 8 * 1.5) + 10; // 1.5 min per attempt + 10 min for winner
                 }
             }
             return 0;

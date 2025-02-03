@@ -5,8 +5,7 @@ using System.Text.Json;
 using System.Xml.Linq;
 using AMImporter;
 using AMImporter.Callroom;
-using CsvHelper;
-using CsvHelper.Configuration;
+
 
 class EventImporter
 {
@@ -39,6 +38,7 @@ class EventImporter
             List<EventTypeCategory> categories = CsvImporter.ImportEventTypeCategory(path);
             List<EventType> eventTypes = CsvImporter.ImportEventTypes(path);
             var englishEventTypes = eventTypes.Where(x => x.Language == "en").ToList<EventType>();
+            int id = 0;
 
             var groupedParticipations = ISonenParticipations
                 .Where(p => !string.IsNullOrEmpty(p.Event))
@@ -52,6 +52,7 @@ class EventImporter
 
                     return new
                     {
+                        Id = id++,
                         Event = g.Key.Event,
                         EventCategory = g.Key.EventCategory,
                         EventDate = g.Key.EventDate,
@@ -59,27 +60,56 @@ class EventImporter
                         FieldType = eventType?.FieldType.Trim(),
                         EventAbbreviation = eventType?.StandardAbbreviation,
                         Distance = eventType?.Distance,
-                        EstimatedDuration = AthleticEventTimeCalculator.EstimateEventTime(eventType?.StandardAbbreviation, eventType?.FieldType, g.Count())
+                        EstimatedDuration = AthleticEventTimeCalculator.EstimateEventTime(eventType?.StandardAbbreviation, eventType?.FieldType, g.Count(), eventType?.Distance)
                     };
                 })
                 .ToList();
 
+            int takeCount = 75;
+            var numSlots = 200;
+
+            var events = groupedParticipations.Take(takeCount).Select(x =>
+            {
+                return new MeetScheduler.Event()
+                {
+                    Id = x.Id,
+                    Name = $"{x.Event} {x.EventCategory}",
+                    Area = $"{x.FieldType??"Running"}",
+                    DurationInSlots = 2,
+                    EventType = x.Event
+                };
+            }).ToList();
+ 
+            var participantNames = groupedParticipations.Take(takeCount).SelectMany(x => x.Participants).Select(y => $"{y.FirstName} {y.LastName}").ToList();
+
+            var participants = participantNames.Select(x =>
+            {
+                return new MeetScheduler.Participant()
+                {
+                    EventIds = groupedParticipations.Take(takeCount).Where(y => y.Participants.Select(z => $"{z.FirstName} {z.LastName}").Contains(x)).Select(q => q.Id).ToList(),
+                    Name = x
+                };
+            }).ToList();
+
+            var (eventTimeSlots, solver, status) = MeetScheduler.AthleticMeetScheduler.GetMeetSchedule(events, participants, numSlots);
+            MeetScheduler.AthleticMeetScheduler.PrintResult(eventTimeSlots, solver, status, events, participants, numSlots);
+
             string timescheduleCSV = string.Join(
-                                                Environment.NewLine, // Delimiter to join each line
-                                                groupedParticipations.Select(x =>
-                                                {
-                                                    var abbreviation = amCategory.GetAMAbbreviation(x.EventCategory);
-                                                    var category = categories
-                                                        .Where(y => y.SAEventName == x.Event && y.AMCategoryAbbreviation == abbreviation)
-                                                        .FirstOrDefault();
-                                                    var amEventName = category?.AMEventName;
-                                                    var saEventCategoryName = category?.SAEventCategoryName;
+                        Environment.NewLine, // Delimiter to join each line
+                        groupedParticipations.Select(x =>
+                        {
+                            var abbreviation = amCategory.GetAMAbbreviation(x.EventCategory);
+                            var category = categories
+                                .Where(y => y.SAEventName == x.Event && y.AMCategoryAbbreviation == abbreviation)
+                                .FirstOrDefault();
+                            var amEventName = category?.AMEventName;
+                            var saEventCategoryName = category?.SAEventCategoryName;
 
-                                                    var sessionName = Session.GetName(abbreviation);
-                                                    var eventName = $"{x.Event} {abbreviation}".Replace(" meter", "m");
+                            var sessionName = Session.GetName(abbreviation);
+                            var eventName = $"{x.Event} {abbreviation}".Replace(" meter", "m");
 
-                                                    return $"{sessionName};00:00:00|finale|1;{eventName};{x.Event};{abbreviation};{amEventName};{saEventCategoryName}";
-                                                }));
+                            return $"{sessionName};00:00:00|finale|1;{eventName};{x.Event};{abbreviation};{amEventName};{saEventCategoryName}";
+                        }));
 
 
             string fullFileName = path + "\\create\\timeschedule.csv";
