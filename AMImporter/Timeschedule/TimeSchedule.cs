@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AMImporter
+namespace AMImporter.Timeschedule
 {
     public class TimeSchedule
     {
@@ -33,17 +33,17 @@ namespace AMImporter
                     SAEventCategoryName = line[3],
                     AgeCategory = line[4].Split(',').ToList(),
                     EventTypeStandardName = line[5],
-                    SAEventName = (line.Length == 7) ? line[6] : null
+                    SAEventName = line.Length == 7 ? line[6] : null
                 }
             );
-         
+
             int eventId = 0;
             var AMEventGroups = AMEvents.Values.GroupBy(x => x.Name);
             AMEventGroups.ToList().ForEach(x =>
             {
                 eventId++;
                 x.ToList().ForEach(y => y.Id = eventId);
-            });           
+            });
         }
 
         public string GetAMEventName(string SAEventCategory, string SAAgeCategoryCode)
@@ -52,7 +52,8 @@ namespace AMImporter
             try
             {
                 var amEventNames = AMEvents.Where(x => x.Value.SAEventCategoryName == SAEventCategory && x.Value.AgeCategory.Contains(SAAgeCategoryCode));
-                if (amEventNames.Any()) {
+                if (amEventNames.Any())
+                {
                     AMEventName = amEventNames.FirstOrDefault().Value.Name;
                 }
             }
