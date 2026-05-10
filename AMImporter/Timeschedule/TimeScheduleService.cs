@@ -69,17 +69,25 @@ namespace AMImporter.Timeschedule
 
             int takeCount = 20;
             //var numSlots = 48;
-            var numSlots = 100;
+            var numSlots = 88;
 
             var filteredGroupedParticipations = _groupedParticipations.Take(takeCount);
 
             var events = filteredGroupedParticipations.Select(x =>
             {
+                string area = $"{(string.IsNullOrEmpty(x.FieldType) ? "Running" : x.EventAbbreviation)}";
+                if (x.EventAbbreviation == "LJ" || x.EventAbbreviation == "TJ")
+                {
+                    // Distribute evenly between the two long jump pits.
+                    Random random = new Random();
+                    string[] options = { "Lengdegrop 1", "Lengdegrop 2" };
+                    area = options[random.Next(options.Length)];
+                }
                 return new MeetScheduler.Event()
                 {
                     Id = x.Id,
                     Name = $"{x.Event} {x.EventCategory}",
-                    Area = $"{(string.IsNullOrEmpty(x.FieldType) ? "Running" : x.FieldType)}",
+                    Area = area,
                     DurationInSlots = AthleticMeetScheduler.MinutesToSlotNo(x.EstimatedDuration),
                     EventType = x.Event
                 };

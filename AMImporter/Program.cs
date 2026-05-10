@@ -56,14 +56,14 @@ class EventImporter
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
             athletes.CreateCompetitor(path, competition);
-            athletes.CreateRecord(path, timeSchedule);
+            //athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);
             ZipFile.CreateFromDirectory(path + "\\create", zipfilename);
         }
         else
         {
-            ISonenParticipations = ISonenImporter.import(filename, null);
+            ISonenParticipations = ISonenImporter.import(filename, null, true);
             ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
             ISonenImporter.FixRelays(ISonenParticipations);
             Team teams = new Team(ISonenParticipations, path);
@@ -77,7 +77,7 @@ class EventImporter
             athletes.CreateParticipation(path, timeSchedule, competition);
             athletes.CreateParticipationWithoutEvent(path, timeSchedule, competition);
             athletes.CreateCompetitor(path, competition);
-            //athletes.CreateRecord(path, timeSchedule);
+            athletes.CreateRecord(path, timeSchedule);
             string zipfilename = $"{path}\\create.zip";
             File.Delete(zipfilename);
             ZipFile.CreateFromDirectory(path + "\\create", zipfilename);

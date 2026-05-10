@@ -48,24 +48,27 @@ namespace AMImporter
 
             if (eventType == "H")
             {
+                int jumpInForNextGroup = 20;
                 // Example: 12 participants → 3 rounds for all (12x3=36 attempts), 3 final rounds (8x3=24 attempts)
                 int totalAttempts = (numParticipants * 3) + (Math.Min(numParticipants, 8) * 3);
-                return totalAttempts + 3; // 1 min per attempt + 3 min for reorder
+                return totalAttempts + 3 + jumpInForNextGroup; // 1 min per attempt + 3 min for reorder
             }
 
             if (eventType == "V")
             {
                 if (eventAbbreviation == "HJ")
                 {
+                    int jumpInForNextGroup = 20;
                     // Example: 12 participants → 3 rounds for all (12x3=36 attempts), 3 final rounds (8x3=24 attempts)
                     int totalAttempts = (numParticipants * 3) + (Math.Min(numParticipants, 8) * 3);
-                    return totalAttempts + 3; // 1 min per attempt + 3 min for reorder
+                    return totalAttempts + 3 + jumpInForNextGroup; // 1 min per attempt + 3 min for reorder
                 }
 
                 if (eventAbbreviation == "PV")
                 {
+                    int jumpInForNextGroup = 30;
                     // Example: 12 participants → 8 attempts each (12x8=96 attempts)
-                    return (numParticipants * 8 * 1.5) + 10; // 1.5 min per attempt + 10 min for winner
+                    return (numParticipants * 8 * 1.5) + 10 + jumpInForNextGroup; // 1.5 min per attempt + 10 min for winner
                 }
             }
             return 0;

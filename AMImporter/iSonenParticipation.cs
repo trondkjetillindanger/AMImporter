@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace AMImporter
     public class iSonenParticipation
     {
         private string _eventCategory = null;
+        public string Tidsmerke { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string BirthDate { get; set; }
@@ -41,6 +43,34 @@ namespace AMImporter
         public string Id { get; set; }
         public string Bib { get; set; }
 
+        public bool IsOlderThan13()
+        {
+            if (DateTime.TryParseExact(BirthDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime birthDate))
+            {
+                int age = GetAge(birthDate);
+                return age > 13;
+            }
+            return false; // Or throw exception depending on your use case
+        }
+
+        public bool IsYoungerThan10()
+        {
+            if (DateTime.TryParseExact(BirthDate, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime birthDate))
+            {
+                int age = GetAge(birthDate);
+                return age < 10;
+            }
+            return false; // Or throw exception
+        }
+
+        private int GetAge(DateTime birthDate)
+        {
+            var today = DateTime.Today;
+            int age = today.Year - birthDate.Year;
+            if (birthDate.Date > today.AddYears(-age)) age--;
+            return age;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
@@ -53,7 +83,13 @@ namespace AMImporter
             return FirstName == otherPerson.FirstName &&
                    LastName == otherPerson.LastName &&
                    BirthDate == otherPerson.BirthDate &&
-                   Gender == otherPerson.Gender;
+                   Gender == otherPerson.Gender &&
+                   Event == otherPerson.Event;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FirstName, LastName, BirthDate, Gender, Event);
         }
     }
 }

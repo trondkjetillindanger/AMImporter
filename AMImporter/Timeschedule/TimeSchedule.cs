@@ -9,7 +9,7 @@ namespace AMImporter.Timeschedule
     public class TimeSchedule
     {
         string filename = "timeschedule.csv";
-        public bool AutoGenerate { get; set; } = true;
+        public bool AutoGenerate { get; set; } = false;
         public Dictionary<string, AMEvent> AMEvents { get; set; }
         public TimeSchedule(string _path)
         {
