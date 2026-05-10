@@ -26,6 +26,13 @@ namespace AMImporter
             public RecordItem SB { get; set; }
         }
 
+        class ResultItem
+        {
+            public string Result { get; set; }
+            public string Date { get; set; }
+            public string Wind { get; set; } = "0.0";
+        }
+
         class Athlete
         {
             public string? Athlete_Id { get; set; }
@@ -39,13 +46,13 @@ namespace AMImporter
         }
 
 
-        public async static Task<string?> GetAthleteIdAsync(string firstname, string lastname, string birthDate)
+        public async static Task<string?> GetAthleteIdAsync(string firstname, string lastname, string? birthDate)
         {
             var values = new Dictionary<string, string>
                           {
                               { "FirstName", firstname },
                               { "LastName", lastname },
-                              { "DateOfBirth", birthDate },
+                              { "DateOfBirth", birthDate ?? string.Empty },
                           };
 
             string json = JsonSerializer.Serialize(values);
@@ -55,9 +62,9 @@ namespace AMImporter
             var response = await httpClient.PostAsync("http://www.minfriidrettsstatistikk.info/php/sokutover.php", content);
 
             var jsonString = await response.Content.ReadAsStringAsync();
-            Athlete athlete = JsonSerializer.Deserialize<List<Athlete>>(jsonString).FirstOrDefault();
+            Athlete? athlete = JsonSerializer.Deserialize<List<Athlete>>(jsonString)?.FirstOrDefault();
 
-            if (string.IsNullOrEmpty(athlete.Athlete_Id))
+            if (string.IsNullOrEmpty(athlete?.Athlete_Id))
             {
                 return null;
             }
@@ -170,7 +177,7 @@ namespace AMImporter
                 //    return new AMRecordDTO();
                 //}
             }
-            else
+            else if (records.PB != null)
             {
                 DateTime pbDate = DateTime.ParseExact(records.PB.Date, "dd.MM.yyyy", null);
                 DateTime? sbDate = null;
@@ -200,47 +207,366 @@ namespace AMImporter
             };
         }
 
-        public static AMRecordDTO GetAthleteRecord(string firstname, string lastname, string eventName, string ageCode, string birthDate, bool useApi = true)
+        private async static Task<AMRecordDTO> GetPreviousYearAthleteRecordAsync(string athleteId, string eventName, bool isOutdoor)
         {
-            if (new string[] { "G10", "J10" }.Contains(ageCode))
+            var previousYear = DateTime.Now.Year - 1;
+            var values = new Dictionary<string, string>
+            {
+                { "athlete", athleteId },
+                { "type", "RES" }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+            var response = await httpClient.PostAsync("https://www.minfriidrettsstatistikk.info/php/UtoverStatistikk.php", content);
+            var html = await response.Content.ReadAsStringAsync();
+            var result = GetPreviousYearResultFromHtml(html, eventName, isOutdoor, previousYear);
+
+            if (result == null)
+            {
+                Console.WriteLine($"No previous year stats found for {athleteId} in {eventName}.");
+                return new AMRecordDTO();
+            }
+
+            return new AMRecordDTO
+            {
+                SB =
+                {
+                    Date = result.Date,
+                    Time = result.Result,
+                    Wind = result.Wind
+                }
+            };
+        }
+
+        private static ResultItem? GetPreviousYearResultFromHtml(string html, string eventName, bool isOutdoor, int year)
+        {
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            var expectedHeader = isOutdoor ? "UTENDØRS" : "INNENDØRS";
+            var isInExpectedVenue = false;
+            var isInExpectedEvent = false;
+
+            foreach (var node in document.DocumentNode.Descendants())
+            {
+                if (node.Name == "h2")
+                {
+                    isInExpectedVenue = NormalizeText(node.InnerText) == NormalizeText(expectedHeader);
+                    isInExpectedEvent = false;
+                    continue;
+                }
+
+                if (node.Id == "eventheader")
+                {
+                    var header = node.Descendants("h3").FirstOrDefault()?.InnerText;
+                    isInExpectedEvent = isInExpectedVenue && NormalizeText(header) == NormalizeText(eventName);
+                    continue;
+                }
+
+                if (isInExpectedEvent && node.Name == "h4" && NormalizeText(node.InnerText).Contains("IKKEGODKJENTERESULTATER"))
+                {
+                    isInExpectedEvent = false;
+                    continue;
+                }
+
+                if (!isInExpectedEvent || node.Name != "tr")
+                {
+                    continue;
+                }
+
+                var cells = node.Elements("td").ToList();
+                if (cells.Count < 5)
+                {
+                    continue;
+                }
+
+                var yearText = WebUtility.HtmlDecode(cells[0].InnerText).Trim();
+                if (!yearText.StartsWith(year.ToString(), StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return CreateResultItem(cells[1].InnerText, cells[4].InnerText);
+            }
+
+            return null;
+        }
+
+        private static ResultItem CreateResultItem(string resultText, string dateText)
+        {
+            var result = WebUtility.HtmlDecode(resultText).Trim();
+            var wind = "0.0";
+            var windMatch = Regex.Match(result, @"^(?<result>[^()]+)\((?<wind>[+-]?\d+,\d+)\)$");
+            if (windMatch.Success)
+            {
+                result = windMatch.Groups["result"].Value.Trim();
+                wind = windMatch.Groups["wind"].Value.Replace(',', '.');
+            }
+
+            return new ResultItem
+            {
+                Result = result,
+                Date = NormalizeStatDate(WebUtility.HtmlDecode(dateText).Trim()),
+                Wind = wind
+            };
+        }
+
+        private static string NormalizeStatDate(string dateText)
+        {
+            if (DateTime.TryParseExact(dateText, new[] { "dd.MM.yy", "dd.MM.yyyy" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            {
+                return date.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+            }
+
+            return dateText;
+        }
+
+        private static string NormalizeText(string? text)
+        {
+            return WebUtility.HtmlDecode(text ?? string.Empty).Replace(" ", string.Empty).Trim().ToUpperInvariant();
+        }
+
+        private static AMRecordDetailDTO GetBestPersonalRecord(string eventName, params AMRecordDTO[] records)
+        {
+            var candidates = records.Select(record => record.PB.Time != null ? record.PB : record.SB).Where(record => record.Time != null).ToList();
+            if (!candidates.Any())
+            {
+                return new AMRecordDetailDTO();
+            }
+
+            return candidates.Aggregate((best, candidate) => IsBetterResult(eventName, candidate.Time, best.Time) ? candidate : best);
+        }
+
+        private static bool IsBetterResult(string eventName, string candidate, string currentBest)
+        {
+            if (!TryParseResult(candidate, out var candidateValue))
+            {
+                return false;
+            }
+            if (!TryParseResult(currentBest, out var currentBestValue))
+            {
+                return true;
+            }
+
+            return IsHigherResultBetter(eventName) ? candidateValue > currentBestValue : candidateValue < currentBestValue;
+        }
+
+        private static bool IsHigherResultBetter(string eventName)
+        {
+            return new[] { "Høyde", "Stav", "Lengde", "Tresteg", "Kule", "Diskos", "Slegge", "Spyd", "Liten Ball" }
+                .Any(fieldEvent => eventName.StartsWith(fieldEvent, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool TryParseResult(string result, out double value)
+        {
+            value = 0;
+            var resultWithoutWind = Regex.Replace(result, @"\([^)]*\)", string.Empty).Trim();
+            var parts = resultWithoutWind.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                return false;
+            }
+
+            if (parts.Length == 1)
+            {
+                return double.TryParse(parts[0], NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+            }
+
+            if (parts.Length == 2)
+            {
+                return double.TryParse(resultWithoutWind.Replace(',', '.'), NumberStyles.Number, CultureInfo.InvariantCulture, out value);
+            }
+
+            for (var index = 0; index < parts.Length - 1; index++)
+            {
+                if (!double.TryParse(parts[index], NumberStyles.Number, CultureInfo.InvariantCulture, out var timePart))
+                {
+                    return false;
+                }
+                value = value * 60 + timePart;
+            }
+
+            var decimals = parts.Last();
+            if (!double.TryParse(decimals, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalPart))
+            {
+                return false;
+            }
+
+            value += decimalPart / Math.Pow(10, decimals.Length);
+            return true;
+        }
+
+        private static bool ShouldSkipStatsLookup(string ageCode)
+        {
+            var match = Regex.Match(ageCode ?? string.Empty, @"\d+");
+            return match.Success && int.TryParse(match.Value, out var age) && age <= 10;
+        }
+
+        private static string? GetAthleteIdFromApi(string firstname, string lastname, string? birthDate)
+        {
+            foreach (var dateCandidate in GetBirthDateCandidates(birthDate))
+            {
+                foreach (var nameCandidate in GetNameCandidates(firstname, lastname))
+                {
+                    var athleteId = GetAthleteIdAsync(nameCandidate.FirstName, nameCandidate.LastName, dateCandidate).Result;
+                    if (athleteId != null)
+                    {
+                        return athleteId;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static string? GetAthleteIdFromHtmlSearch(string firstname, string lastname, string? birthDate)
+        {
+            foreach (var nameCandidate in GetNameCandidates(firstname, lastname))
+            {
+                var athleteId = GetAthleteId(nameCandidate.FirstName, nameCandidate.LastName, birthDate);
+                if (athleteId != null)
+                {
+                    return athleteId;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsBirthDateMatch(string? expectedBirthDate, string actualBirthDate)
+        {
+            if (string.IsNullOrWhiteSpace(expectedBirthDate) || string.IsNullOrWhiteSpace(actualBirthDate))
+            {
+                return true;
+            }
+
+            var normalizedActualBirthDate = actualBirthDate.Trim();
+            if (DateTime.TryParseExact(expectedBirthDate.Trim(), new[] { "yyyy-MM-dd", "dd.MM.yyyy", "d.M.yyyy" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out var expectedDate))
+            {
+                return normalizedActualBirthDate == expectedDate.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture)
+                    || normalizedActualBirthDate == expectedDate.Year.ToString(CultureInfo.InvariantCulture);
+            }
+
+            return normalizedActualBirthDate == expectedBirthDate.Trim();
+        }
+
+        private static bool IsAthleteNameMatch(string actualName, string firstName, string lastName)
+        {
+            var expectedName = $"{lastName}, {firstName}";
+            return NormalizeComparableName(actualName) == NormalizeComparableName(expectedName);
+        }
+
+        private static string NormalizeComparableName(string? name)
+        {
+            return Regex.Replace(WebUtility.HtmlDecode(name ?? string.Empty), @"[\s.]", string.Empty).Trim().ToUpperInvariant();
+        }
+
+        private static IEnumerable<string?> GetBirthDateCandidates(string? birthDate)
+        {
+            if (string.IsNullOrWhiteSpace(birthDate))
+            {
+                yield return string.Empty;
+                yield break;
+            }
+
+            var trimmedBirthDate = birthDate.Trim();
+            yield return trimmedBirthDate;
+
+            if (DateTime.TryParseExact(trimmedBirthDate, new[] { "yyyy-MM-dd", "dd.MM.yyyy", "d.M.yyyy" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedBirthDate))
+            {
+                var norwegianDate = parsedBirthDate.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+                if (norwegianDate != trimmedBirthDate)
+                {
+                    yield return norwegianDate;
+                }
+            }
+        }
+
+        private static IEnumerable<(string FirstName, string LastName)> GetNameCandidates(string firstname, string lastname)
+        {
+            var candidates = new List<(string FirstName, string LastName)>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var cleanFirstName = NormalizeName(firstname);
+            var cleanLastName = NormalizeName(lastname);
+            var firstNameParts = SplitName(cleanFirstName);
+            var lastNameParts = SplitName(cleanLastName);
+
+            AddNameCandidate(cleanFirstName, cleanLastName);
+
+            if (firstNameParts.Length > 1)
+            {
+                AddNameCandidate(firstNameParts[0], cleanLastName);
+            }
+
+            if (lastNameParts.Length > 1)
+            {
+                AddNameCandidate(cleanFirstName, lastNameParts.Last());
+                AddNameCandidate(cleanFirstName, lastNameParts.First());
+                if (firstNameParts.Length > 0)
+                {
+                    AddNameCandidate(firstNameParts[0], lastNameParts.Last());
+                    AddNameCandidate(firstNameParts[0], lastNameParts.First());
+                }
+            }
+
+            var allNameParts = firstNameParts.Concat(lastNameParts).ToArray();
+            if (allNameParts.Length > 2)
+            {
+                for (var index = 1; index < allNameParts.Length; index++)
+                {
+                    AddNameCandidate(allNameParts[0], allNameParts[index]);
+                    AddNameCandidate(string.Join(" ", allNameParts.Take(index)), string.Join(" ", allNameParts.Skip(index)));
+                }
+            }
+
+            return candidates;
+
+            void AddNameCandidate(string firstNameCandidate, string lastNameCandidate)
+            {
+                firstNameCandidate = NormalizeName(firstNameCandidate);
+                lastNameCandidate = NormalizeName(lastNameCandidate);
+                if (string.IsNullOrEmpty(firstNameCandidate) || string.IsNullOrEmpty(lastNameCandidate))
+                {
+                    return;
+                }
+
+                var key = $"{firstNameCandidate}|{lastNameCandidate}";
+                if (seen.Add(key))
+                {
+                    candidates.Add((firstNameCandidate, lastNameCandidate));
+                }
+            }
+        }
+
+        private static string[] SplitName(string name)
+        {
+            return name.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+
+        private static string NormalizeName(string? name)
+        {
+            return Regex.Replace(name ?? string.Empty, @"\s+", " ").Trim();
+        }
+
+        public static AMRecordDTO GetAthleteRecord(string firstname, string lastname, string eventName, string ageCode, string birthDate, bool isOutdoor = true, bool useApi = true)
+        {
+            if (ShouldSkipStatsLookup(ageCode))
             {
                 return new AMRecordDTO();
             }
             Thread.Sleep(1500);
-            string[] names = firstname.Split(' ');
             string? athleteId = null;
 
             if (useApi)
             {
-                athleteId = GetAthleteIdAsync(firstname, lastname, birthDate).Result;
-                if (athleteId == null && names[0] != firstname)
+                athleteId = GetAthleteIdFromApi(firstname, lastname, birthDate);
+                if (athleteId == null)
                 {
-                    athleteId = GetAthleteIdAsync(names[0], lastname, birthDate).Result; // All names might not have been included in stats.
-                    if (athleteId == null)
-                    {
-                        athleteId = GetAthleteIdAsync(names[0], names[1], birthDate).Result; // Different order of last names might have been used.
-                    }
-                    if (athleteId == null && names.Length >= 3)
-                    {
-                        athleteId = GetAthleteIdAsync(names[0], names[2], birthDate).Result; // Different order of last names might have been used.
-                    }
+                    athleteId = GetAthleteIdFromHtmlSearch(firstname, lastname, birthDate);
                 }
             }
             else {
-                athleteId = GetAthleteId(firstname, lastname);
-
-                if (athleteId == null && names[0] != firstname)
-                {
-                    athleteId = GetAthleteId(names[0], lastname); // All names might not have been included in stats.
-                    if (athleteId == null)
-                    {
-                        athleteId = GetAthleteId(names[0], names[1]); // Different order of last names might have been used.
-                    }
-                    if (athleteId == null && names.Length >= 3)
-                    {
-                        athleteId = GetAthleteId(names[0], names[2]); // Different order of last names might have been used.
-                    }
-                }
+                athleteId = GetAthleteIdFromHtmlSearch(firstname, lastname, birthDate);
             }
 
             if (athleteId == null)
@@ -249,7 +575,20 @@ namespace AMImporter
                 return new AMRecordDTO();
             }
             //var athleteSB = GetValidAthleteSBPrioritized(athleteId, eventName, false);
-            var athleteRecord = GetAthleteRecordAsync(athleteId, eventName, false).Result;
+            var athleteRecord = GetAthleteRecordAsync(athleteId, eventName, isOutdoor).Result;
+            var backupAthleteRecord = GetAthleteRecordAsync(athleteId, eventName, !isOutdoor).Result;
+            athleteRecord.PB = GetBestPersonalRecord(eventName, athleteRecord, backupAthleteRecord);
+            if (athleteRecord.SB.Time == null)
+            {
+                if (backupAthleteRecord.SB.Time != null)
+                {
+                    athleteRecord.SB = backupAthleteRecord.SB;
+                }
+            }
+            if (athleteRecord.SB.Time == null)
+            {
+                athleteRecord.SB = GetPreviousYearAthleteRecordAsync(athleteId, eventName, isOutdoor).Result.SB;
+            }
             //if (eventName == "Lengde") {
             //    var athleteSBLengdeSone = GetAthleteRecordAsync(athleteId, "Lengde(Sone 0, 5m)", null).Result;
             //    if (athleteSB.SB.Time==null)
@@ -266,15 +605,14 @@ namespace AMImporter
             return athleteRecord;
         }
 
-        private static string GetAthleteId(string firstname, string lastname)
+        private static string? GetAthleteId(string firstname, string lastname, string? birthDate = null)
         {
-            string fullname = lastname.TrimEnd() + ", " + firstname.TrimEnd();
             using (WebClient web1 = new WebClient())
             {
                 string myParameters = $"cmd=SearchAthlete&showathlete={lastname}";
                 web1.Headers[HttpRequestHeader.ContentType] = "application/x-www-form-urlencoded";
                 string baseUrl = "https://www.minfriidrettsstatistikk.info/php";
-                string Html = null;
+                string? Html = null;
                 try { 
                     Html = web1.UploadString(baseUrl+"/UtoverSok.php", myParameters);
                 }
@@ -293,26 +631,9 @@ namespace AMImporter
                     foreach (HtmlNode link in htmlSnippet.DocumentNode.SelectNodes("//a[@href]"))
                     {
                         HtmlAttribute att = link.Attributes["href"];
-                        var fullnameFromStat = att.OwnerNode.InnerHtml.Replace(" ", "");
-                        var names = att.OwnerNode.InnerHtml.Split(' ').Select(x => x.TrimEnd(',')).ToArray<string>();
-                        string alt1FullnameFromStat = $"{names[0]},{names[1]}";
-                        string alt2FullnameFromStat = $"{names[2]},{names[1]}";
-
-                        if (fullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || fullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ","").ToLower())
-                        {
-                            Uri uri = new Uri(new Uri(baseUrl), att.Value);
-                            string queryString = uri.Query;
-                            var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
-                            return queryDictionary["showathl"];
-                        }
-                        if (alt1FullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || alt1FullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ", "").ToLower())
-                        {
-                            Uri uri = new Uri(new Uri(baseUrl), att.Value);
-                            string queryString = uri.Query;
-                            var queryDictionary = System.Web.HttpUtility.ParseQueryString(queryString);
-                            return queryDictionary["showathl"];
-                        }
-                        if (alt2FullnameFromStat.ToLower() == fullname.Replace(" ", "").ToLower() || alt2FullnameFromStat.ToLower() == fullname.Substring(0, fullname.LastIndexOf(" ") + 2).Replace(" ", "").ToLower())
+                        var actualName = WebUtility.HtmlDecode(att.OwnerNode.InnerText).Trim();
+                        var actualBirthDate = WebUtility.HtmlDecode(link.ParentNode?.NextSibling?.InnerText ?? string.Empty).Trim();
+                        if (IsAthleteNameMatch(actualName, firstname, lastname) && IsBirthDateMatch(birthDate, actualBirthDate))
                         {
                             Uri uri = new Uri(new Uri(baseUrl), att.Value);
                             string queryString = uri.Query;

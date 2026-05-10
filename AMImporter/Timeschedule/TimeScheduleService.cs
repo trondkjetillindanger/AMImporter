@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if MEET_SCHEDULER_AVAILABLE
 using MeetScheduler;
+#endif
 
 namespace AMImporter.Timeschedule
 {
@@ -23,6 +25,9 @@ namespace AMImporter.Timeschedule
 
         public void Create()
         {
+#if !MEET_SCHEDULER_AVAILABLE
+            throw new InvalidOperationException("Automatic time schedule generation requires the MeetScheduler project at '..\\..\\MeetScheduler\\MeetScheduler\\MeetScheduler.csproj'. Add that sibling repository or provide create\\timeschedule.csv before running AMImporter.");
+#else
             var ISonenParticipations = ISonenImporter.import(_filename, null);
             ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
             ISonenImporter.FixRelays(ISonenParticipations);
@@ -110,6 +115,7 @@ namespace AMImporter.Timeschedule
 
             var (eventTimeSlots, solver, status) = MeetScheduler.AthleticMeetScheduler.GetMeetSchedule(events, participants, numSlots);
             MeetScheduler.AthleticMeetScheduler.PrintResult(eventTimeSlots, solver, status, events, participants, numSlots);
+#endif
 
         }
 

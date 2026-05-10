@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug AMImporter",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build AMImporter",
+      "program": "${workspaceFolder}/AMImporter/bin/Debug/net10.0/AMImporter.dll",
+      "args": [
+        "C:/AM/Dropbox/Stevner/2026/Ute/Jærcup 1/SAImport/Deltakerliste.csv"
+      ],
+      "cwd": "${workspaceFolder}/AMImporter",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

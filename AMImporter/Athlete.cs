@@ -307,6 +307,7 @@ namespace AMImporter
 
         public void CreateRecord(string _path, TimeSchedule timeSchedule)
         {
+            AMEventType amEventType = new AMEventType(_path);
             string recordsCSV = "'db_athletes.firstname*';'db_athletes.lastname*';'db_athletes.birthdate';'db_eventtypes.standardname*';'db_records.date';'db_records.value';'db_records.wind';'db_records.seasonflag';'db_records.alltimeflag'" + Environment.NewLine;
 
             if (root != null)
@@ -318,9 +319,10 @@ namespace AMImporter
                      let entry = el.Element("Entry")
                      let ageCode = (string)entry.Element("EntryClass").Attribute("classCode")
                      let eventCategory = (string)entry.Element("Exercise").Attribute("name")
+                     let amEvent = timeSchedule.GetAMEvent(eventCategory, ageCode)
                      let givenname = (string?)person.Element("Name")?.Element("Given")
                      let familyname = (string?)person.Element("Name")?.Element("Family")
-                     let athleteRecord = RecordImporter.GetAthleteRecord(givenname, familyname, timeSchedule.GetAMEvent(eventCategory, ageCode)?.SAEventName ?? eventCategory, ageCode, null)
+                     let athleteRecord = RecordImporter.GetAthleteRecord(givenname, familyname, amEvent?.SAEventName ?? eventCategory, ageCode, null, amEventType.IsOutdoor(amEvent?.EventTypeStandardName))
                      orderby name
                      select String.Format("'{0}';'{1}';'{2}-{3}-{4}';'{5}';'{6} 00:00:00';'{7}';'{8}';'1';'0'{9}",
                  givenname.TrimEnd(' '),
@@ -328,7 +330,7 @@ namespace AMImporter
                  (string?)person.Element("BirthDate")?.Attribute("year"),
                  (string)((int?)person.Element("BirthDate")?.Attribute("month") ?? 1).ToString("D2"),
                  (string)((int?)person.Element("BirthDate")?.Attribute("day") ?? 1).ToString("D2"),
-                 timeSchedule.GetAMEvent(eventCategory, ageCode)?.EventTypeStandardName,
+                 amEvent?.EventTypeStandardName,
                  athleteRecord.SB.Date,
                  athleteRecord.SB.Time,
                  athleteRecord.SB.Wind,
@@ -347,7 +349,7 @@ namespace AMImporter
                     var ageCode = amCategory.GetAMAbbreviation(x.EventCategory);
                     var amEvent = timeSchedule.GetAMEvent(x.Event, ageCode );
                     var standardName = amEvent?.EventTypeStandardName;
-                    var athleteRecord = RecordImporter.GetAthleteRecord(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), string.IsNullOrEmpty(amEvent?.SAEventName) ? x.Event.TrimEnd(' '): amEvent.SAEventName, ageCode, x.BirthDate);
+                    var athleteRecord = RecordImporter.GetAthleteRecord(x.FirstName.TrimEnd(' '), x.LastName.TrimEnd(' '), string.IsNullOrEmpty(amEvent?.SAEventName) ? x.Event.TrimEnd(' '): amEvent.SAEventName, ageCode, x.BirthDate, amEventType.IsOutdoor(standardName));
                     if (athleteRecord.SB.Time==null)
                     {
                         return "";
