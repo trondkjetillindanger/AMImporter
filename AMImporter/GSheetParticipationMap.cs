@@ -12,9 +12,10 @@ namespace AMImporter
         public GSheetParticipationMap()
         {
             Map(p => p.Tidsmerke).Name("Tidsmerke");
+            Map(p => p.Email).Name("E-postadresse");
             Map(p => p.FirstName).Name("Fornamn");
             Map(p => p.LastName).Name("Etternamn");
-            Map(p => p.BirthDate).Name("Fødselsdag");
+            Map(p => p.BirthDate).Name("Fødselsdag", "Fødselsdag (dd.mm.yyyy)");
             //Map(p => p.Gender).Name("Kjønn");
             Map(p => p.Team).Name("Velg skole");
             //Map(p => p.TeamId).Name("Velg skole");
@@ -28,7 +29,13 @@ namespace AMImporter
             //Map(p => p.Id).Name("Person ID");
             Map(p => p.Event).Convert(row =>
             {
-                var categoryAndGender = row.Row.GetField("Velg klasse og kjønn");
+                var csvRow = row.Row;
+                if (csvRow == null)
+                {
+                    return string.Empty;
+                }
+
+                var categoryAndGender = csvRow.GetField("Velg klasse og kjønn") ?? string.Empty;
 
                 // Decide index based on substring in the event
                 int index = categoryAndGender.Contains("5.klasse (jente)") ? 0 :
@@ -39,7 +46,7 @@ namespace AMImporter
                             categoryAndGender.Contains("7.klasse (gutt)") ? 5 : 0; // fallback
 
                 // Get the correct "Velg skole" column based on index
-                return row.Row.GetField("Ønsker å delta i (maks to øvingar)", index);
+                return csvRow.GetField("Ønsker å delta i (maks to øvingar)", index) ?? string.Empty;
             });
 
         }
