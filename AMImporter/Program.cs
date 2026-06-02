@@ -63,7 +63,7 @@ class EventImporter
         }
         else
         {
-            ISonenParticipations = ISonenImporter.import(filename, null, false);
+            ISonenParticipations = ISonenImporter.import(filename, null, true);
             ISonenParticipations = ISonenImporter.FixRelays(ISonenParticipations);
             ISonenImporter.FixRelays(ISonenParticipations);
             Team teams = new Team(ISonenParticipations, path);

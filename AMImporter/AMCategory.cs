@@ -49,12 +49,24 @@ namespace AMImporter
                 AMName = "KU23";
             }
 
-            if (AMName.Contains("veteran"))
+            if (AMName.Contains("masters"))
+            {
+                AMName = AMName.Replace("masters", "veteraner");
+            }
+            else if (AMName.Contains("veteran") && !AMName.Contains("veteraner"))
             {
                 AMName = AMName.Replace("veteran", "veteraner");
             }
 
-            return AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower().Trim()).First().Key;
+            var match = AMCategories.Where(x => x.Value.ToLower() == AMName.ToLower().Trim()).ToList();
+            if (match.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"No AM category abbreviation found for class '{AMName}'. " +
+                    $"Add a matching entry to categories.csv or extend the mapping in GetAMAbbreviation.");
+            }
+
+            return match.First().Key;
         }
     }
 }
